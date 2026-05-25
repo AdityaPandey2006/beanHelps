@@ -1,0 +1,268 @@
+beanhelps/
+  apps/
+    web/
+    api/
+
+  packages/
+    shared/
+    config/
+
+  database/
+    models/
+    migrations/
+    seed/
+
+  docs/
+
+  infra/
+    docker/
+    nginx/
+
+  scripts/
+
+  tests/
+
+  .env.example
+  .gitignore
+  package.json
+  README.md
+  docker-compose.yml
+
+Root folder: beanhelps/
+This is the main project folder. Everything lives inside it. When you open the project, this is the folder you will run commands from later like install, build, test, or docker compose.
+
+apps/
+This folder holds the actual runnable applications.
+
+apps/web/
+This is your frontend. This is the website users and therapists will see in the browser.
+It will contain:
+
+pages like login, onboarding, forums, support groups, dashboard
+UI components like buttons, cards, chat boxes
+frontend state handling
+API calling code to talk to the backend
+Inside it, you can later keep something like:
+
+apps/web/
+  public/
+  src/
+    components/
+    pages/
+    layouts/
+    hooks/
+    services/
+    styles/
+    utils/
+  package.json
+What these mean:
+
+public/: static files like logos, icons, images
+src/components/: reusable UI pieces like navbar, forum card, chat message
+src/pages/: screens like Home, Login, Anxiety Forum, Therapist Dashboard
+src/layouts/: common page wrappers
+src/hooks/: reusable frontend logic if you use React
+src/services/: code for calling backend APIs
+src/styles/: CSS files, theme files
+src/utils/: small helper functions
+apps/api/
+This is your backend server. It handles business logic, authentication, forum logic, support group logic, therapist verification flow, summaries, and database work.
+
+Inside it, use a feature-based structure like this:
+
+apps/api/
+  src/
+    modules/
+      auth/
+      users/
+      therapists/
+      forums/
+      support-groups/
+      meetings/
+      chat/
+      moderation/
+      summaries/
+    middleware/
+    config/
+    utils/
+    app.js
+    server.js
+  package.json
+What these mean:
+
+modules/: the most important folder; each feature gets its own folder
+middleware/: code that runs before requests, like auth checking, error handling
+config/: environment settings, DB connection setup
+utils/: helper functions used in many places
+app.js: creates the Express app
+server.js: starts the server
+This modules/ approach is especially good for your project because each feature is separate. Example:
+
+modules/auth/
+Login, signup, JWT tokens, password handling.
+
+modules/users/
+Regular user profile, onboarding answers, struggle tags, preferences.
+
+modules/therapists/
+Therapist signup, profile, certificate upload, verification status, specialization, languages.
+
+modules/forums/
+Forum list like anxiety, grief, loneliness, exam stress. Also discussion posts and replies.
+
+modules/support-groups/
+Support circle creation, joining, leaving, waitlist, auto-create-new-group logic when enough users are waiting.
+
+modules/meetings/
+Forum-wide meetings, support group sessions, schedule and event details.
+
+modules/chat/
+Group chat messages, chat room membership, guided prompts.
+
+modules/moderation/
+Safety checks, harmful message detection, reporting tools.
+
+modules/summaries/
+AI-generated weekly summaries and community insights for therapists.
+
+This structure is much better than dumping all routes and models into one place.
+
+packages/
+This folder is for code shared by both frontend and backend.
+
+packages/shared/
+Put reusable code here:
+
+common constants
+forum names
+struggle categories
+validation rules
+shared helper functions
+shared types or schemas if needed
+Example:
+
+packages/shared/
+  constants/
+  validators/
+  utils/
+This helps avoid repeating the same logic in many places.
+
+packages/config/
+Shared configuration files:
+
+ESLint config
+prettier config
+shared app settings
+maybe common environment helpers
+This keeps coding style and setup consistent.
+
+database/
+This folder is for database-related things. Even though MongoDB does not always need migrations in small apps, it is still smart to organize this early.
+
+database/models/
+MongoDB schemas/models.
+Examples:
+
+User.js
+Therapist.js
+Forum.js
+SupportGroup.js
+Message.js
+Meeting.js
+database/migrations/
+If later you need to change stored data format, keep scripts here.
+
+database/seed/
+Sample data for development.
+Example:
+
+default forums like anxiety, burnout, grief
+demo therapist accounts
+sample support groups
+This is very useful in a hackathon because you can quickly populate the app for demos.
+
+docs/
+Keep project writing here:
+
+architecture notes
+API flow notes
+hackathon pitch notes
+database design
+safety policy ideas
+user flow diagrams
+This is helpful because your idea has many moving parts.
+
+infra/
+This is for deployment and infrastructure files.
+
+infra/docker/
+Docker-related files for each app.
+Example:
+
+web.Dockerfile
+api.Dockerfile
+You can containerize later very easily if this folder already exists.
+
+infra/nginx/
+If later you deploy frontend and backend behind Nginx, keep config here.
+
+scripts/
+Useful utility scripts.
+Examples:
+
+seed the database
+create demo forums
+clean test data
+run summaries manually
+tests/
+All test code. You can split it like:
+
+tests/
+  api/
+  web/
+  e2e/
+What these mean:
+
+api/: backend tests
+web/: frontend component or page tests
+e2e/: full flow tests like signup -> join forum -> join support group
+.env.example
+A sample environment file.
+This shows which environment variables are needed, like:
+
+MongoDB URL
+JWT secret
+frontend URL
+backend port
+AI API key if used later
+This is very important for deployment and team collaboration.
+
+package.json at root
+This can manage the whole monorepo.
+Later you can run all apps from one place.
+
+docker-compose.yml
+This is the file that will make local container setup easy later.
+It can start:
+
+frontend
+backend
+MongoDB
+That is why this structure is future-friendly.
+
+For your project, I would especially recommend this backend style for each module:
+
+modules/forums/
+  forum.controller.js
+  forum.service.js
+  forum.routes.js
+  forum.validation.js
+What these do:
+
+controller: receives request and sends response
+service: main business logic
+routes: API route definitions
+validation: checks input data
+This makes your code cleaner and easier to grow.
+
+

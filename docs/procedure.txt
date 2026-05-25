@@ -1,0 +1,99 @@
+setting up the backend first,
+things i am going to do:
+    Start Here
+
+Project setup
+Create the backend app structure properly first:
+Express app
+MongoDB connection
+environment config
+basic folder structure
+error handling
+request validation
+logging
+Without this, every new feature becomes messy.
+
+User and therapist authentication
+Build:
+user signup/login
+therapist signup/login
+password hashing
+JWT auth
+role-based access (beaner / beanpist / maybe admin later)
+This is important because almost every route depends on knowing who is logged in.
+
+Core database models
+Before routes, define the main MongoDB schemas. Start with:
+User
+Therapist
+Forum
+SupportGroup
+GroupMembership
+Post
+Message
+Meeting
+These are your backbone. If these are clear, the rest becomes much easier.
+
+User onboarding flow
+Build the backend for:
+age range
+language
+location
+preferred group size
+primary struggles
+optional tags
+free-text description
+This matters because it feeds forum discovery and support-group matching later.
+
+Therapist onboarding and verification
+Build:
+name
+specializations
+languages
+experience
+availability
+certificate/license upload metadata
+verification status (pending, verified, rejected)
+Even if actual document verification is manual for now, keep the backend flow ready.
+
+Forum system
+Create APIs for:
+list all forums
+get one forum
+create posts
+comment/reply
+filter by category
+This gives you the first visible community layer.
+
+Support group system
+This is one of your most important features. Build:
+list groups in a forum
+join a group
+leave a group
+waitlist logic
+auto-create new group when enough people are waiting
+therapist-created groups
+This is the heart of your idea, so it should come early.
+
+Group chat and membership rules
+After support groups exist, add:
+send message
+fetch messages
+only group members can chat
+therapist can also join/chat if assigned
+Meetings and events
+Then add:
+create meeting
+list upcoming meetings
+forum-wide webinar events
+support-group meetings
+AI/safety features last
+Do these after the main product works:
+weekly summaries
+community insights
+harmful-message detection
+prompt suggestions
+
+
+moved inside the api folder, added the package.json file by installing all dependenciesas
+mentioned.

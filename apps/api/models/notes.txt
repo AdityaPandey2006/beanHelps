@@ -1,0 +1,1 @@
+this is porbably a temporary setup. might move models to a database folder later

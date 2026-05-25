@@ -1,0 +1,3 @@
+modules/health/
+A tiny starter module just to check the backend is alive.
+This is the first route I’d build before auth or users.
