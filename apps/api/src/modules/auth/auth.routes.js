@@ -4,13 +4,15 @@
 //the api/routes folder
 const express = require("express");
 
+const auth = require("../../middleware/auth");
 const validateRequest = require("../../middleware/validateRequest");
-const { signup, login } = require("./auth.controller");
+const { signup, login, getCurrentUser } = require("./auth.controller");
 const { signupValidation, loginValidation } = require("./auth.validation");
 
 const router = express.Router();
 
 router.post("/signup", validateRequest(signupValidation), signup);
 router.post("/login", validateRequest(loginValidation), login);
+router.get("/me", auth, getCurrentUser);
 
 module.exports = router;

@@ -1,5 +1,4 @@
-//this will be storing the User model. 
-//Basically, the format in which the user will be stored in the database
+// This stores the shape of a user document in MongoDB.
 const mongoose = require("mongoose");
 
 const therapistProfileSchema = new mongoose.Schema(
@@ -36,6 +35,48 @@ const therapistProfileSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const onboardingProfileSchema = new mongoose.Schema(
+  {
+    ageRange: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    languages: {
+      type: [String],
+      default: [],
+    },
+    location: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    preferredGroupSize: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    primaryStruggles: {
+      type: [String],
+      default: [],
+    },
+    optionalTags: {
+      type: [String],
+      default: [],
+    },
+    description: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    completedAt: {
+      type: Date,
+      default: null,
+    },
+  },
+  { _id: false }
+);
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -64,9 +105,9 @@ const userSchema = new mongoose.Schema(
       enum: ["beaner", "beanpist", "admin"],
       default: "beaner",
     },
-    isVerified: {
-      type: Boolean,
-      default: false,
+    onboardingProfile: {
+      type: onboardingProfileSchema,
+      default: undefined,
     },
     therapistProfile: {
       type: therapistProfileSchema,

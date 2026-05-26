@@ -1,0 +1,393 @@
+{
+  "project": {
+    "name": "beanHelps",
+    "track": "Open Innovation",
+    "type": "Mental health peer-support and community platform",
+    "oneLinePitch": "beanHelps is a structured peer-support platform where people facing anxiety, stress, loneliness, grief, and similar struggles can find safe communities, join small support circles, and access optional therapist-guided support.",
+    "hackathonFit": {
+      "whyItFits": [
+        "It solves a real social problem with clear emotional and practical impact.",
+        "It has a complete product loop: onboarding, forums, support groups, meetings, and therapist support.",
+        "It is technically buildable as an MVP using JavaScript, Express, MongoDB, and a web frontend.",
+        "It has innovation beyond a simple chat app through structured support groups, therapist participation, waitlist matching, and AI-assisted summaries or safety checks.",
+        "It can be demonstrated clearly within a hackathon through signup, onboarding, forum browsing, support-group matching, and therapist dashboard flows."
+      ],
+      "suggestedMvp": [
+        "Authentication with beaner and beanpist roles",
+        "User onboarding for regular users",
+        "Therapist profile onboarding and verification status",
+        "Forum listing and forum details",
+        "Forum discussions",
+        "Forum-wide meetings or webinars",
+        "Support group listing and tag-based matching",
+        "Basic group join and waitlist flow",
+        "Basic therapist dashboard later with upcoming sessions and summaries"
+      ]
+    }
+  },
+  "problem": {
+    "statement": "There is no focused platform for people dealing with anxiety, depression, stress, loneliness, grief, burnout, and similar issues to safely discover communities, talk with people facing similar problems, join structured support groups, and attend online or offline support meetings.",
+    "existingPlatformGaps": {
+      "Reddit": "Anonymous, but chaotic and not designed for structured emotional support.",
+      "Discord": "Communities can be hard to discover and may feel fragmented.",
+      "FacebookGroups": "Often has poor moderation and may not feel private or safe enough.",
+      "WhatsApp": "Good for small groups but does not scale well and is hard to discover.",
+      "Meetup": "Useful for events, but not designed specifically for emotional support or mental-health communities."
+    },
+    "coreNeed": "People need a safer, more structured place where they can find relevant communities, join small support circles, and optionally receive guidance from verified volunteer therapists."
+  },
+  "users": {
+    "beaner": {
+      "description": "A regular user who needs help, wants emotional support, or wants to join support groups.",
+      "primaryGoals": [
+        "Describe what they are struggling with",
+        "Find relevant forums",
+        "Talk to people with similar experiences",
+        "Join a support group",
+        "Attend meetings or webinars",
+        "Access prompts, resources, and group events"
+      ]
+    },
+    "beanpist": {
+      "description": "A volunteer therapist who joins the platform to participate in forums, support groups, meetings, or guidance flows.",
+      "primaryGoals": [
+        "Create a therapist profile",
+        "Provide specializations, languages, availability, experience, and license or certificate details",
+        "Get verified by the platform",
+        "Participate in discussions when available",
+        "Create or join support groups",
+        "Schedule support group meetings or forum-wide webinars",
+        "View upcoming sessions and AI-assisted community insights later"
+      ]
+    },
+    "possibleFutureAdmin": {
+      "description": "A platform administrator who can verify therapists, moderate communities, and manage forums or support groups.",
+      "note": "Admin should not be available through public signup."
+    }
+  },
+  "originalFlow": {
+    "description": "The first version of the idea placed support groups inside forums as one of three forum layers.",
+    "forumLayers": [
+      {
+        "name": "Discussion layer",
+        "description": "A subreddit-like space where therapists can release articles, users can talk generally, and newcomers can ask for guidance."
+      },
+      {
+        "name": "Support groups layer",
+        "description": "A list of support groups under each forum. Users could join groups with empty spots, be placed on waitlists if all groups were full, and new groups could be created once enough users were waiting."
+      },
+      {
+        "name": "Forum-wide meetings layer",
+        "description": "A space where therapists could organize online meetings, webinars, or wellness sessions for the whole forum."
+      }
+    ],
+    "originalConcern": "A single support group could belong to multiple forums, which would make ownership, discovery, filtering, and backend modeling more complicated."
+  },
+  "currentFlow": {
+    "description": "The updated design separates forums and support groups into two modules. Forums handle public discussion and meetings. The support system handles all support groups in one place with tags for filtering and matching.",
+    "whyChanged": [
+      "It avoids the complexity of one support group being part of multiple forums.",
+      "It makes the product easier for users to understand.",
+      "It keeps backend modules cleaner and easier to scale.",
+      "It allows support groups to be filtered by tags without being owned by forums."
+    ],
+    "forumModule": {
+      "purpose": "Open community layer for public or semi-public topic-based engagement.",
+      "layers": [
+        "Discussion layer",
+        "Meetings and webinars layer"
+      ],
+      "responsibilities": [
+        "List forums such as General, Anxiety, Loneliness, Burnout, Exam Stress, Grief, Relationship Issues, Chronic Illness, Social Anxiety, and Career Stress",
+        "Show forum details",
+        "Host forum discussions and posts",
+        "Allow therapists to publish articles or guidance posts later",
+        "Allow therapists to schedule forum-wide online meetings or webinars"
+      ]
+    },
+    "supportSystemModule": {
+      "purpose": "A separate structured support-circle system where all support groups are listed in one place.",
+      "responsibilities": [
+        "List all support groups across the platform",
+        "Allow users to filter support groups by tags such as anxiety, grief, loneliness, burnout, or exam stress",
+        "Allow users to join support groups with open spots",
+        "Place users into a waitlist when no suitable group has space",
+        "Create new groups from waitlisted users when enough similar users accumulate",
+        "Allow therapists to create support groups",
+        "Support group chat, guided prompts, resources, and events later"
+      ],
+      "tagStrategy": "Support groups are not owned by forums. Instead, each support group has tags or focus areas that support filtering and matching."
+    }
+  },
+  "userJourneys": {
+    "beanerJourney": [
+      "User signs up as a beaner.",
+      "User completes onboarding with age range, language, location, support preferences, primary struggles, optional tags, and a short description.",
+      "User can explore forums based on general interests or struggles.",
+      "User can read and create discussion posts.",
+      "User can attend forum-wide meetings and webinars.",
+      "User can go to the separate support system to browse or join support groups.",
+      "User selects support tags for matching, such as anxiety and grief.",
+      "Backend finds the best available support group based on tag overlap.",
+      "If no suitable group has space, user enters the support-group waitlist."
+    ],
+    "beanpistJourney": [
+      "Therapist signs up as a beanpist.",
+      "Therapist completes profile onboarding with specializations, languages, experience, availability, and license or certificate information.",
+      "Therapist verification status starts as pending.",
+      "Once verified later, therapist can participate more fully.",
+      "Therapist may talk in forum discussions or support group chats when available.",
+      "Therapist can organize forum-wide meetings or webinars.",
+      "Therapist can create support groups and optionally schedule group meetings.",
+      "Therapist dashboard later shows upcoming sessions, AI community insights, and weekly summaries."
+    ]
+  },
+  "authenticationAndProfiles": {
+    "roles": [
+      "beaner",
+      "beanpist",
+      "admin"
+    ],
+    "currentDecision": "Use one User model with a role field instead of separate auth systems for users and therapists.",
+    "reasoning": [
+      "It keeps authentication simple.",
+      "It avoids duplicate signup and login logic.",
+      "It lets role-based middleware decide which routes each user can access.",
+      "Therapist-only fields can live inside therapistProfile."
+    ],
+    "importantSecurityNote": "Admin should not be allowed through public signup even if the role exists in the model.",
+    "beanerProfile": {
+      "route": "PATCH /api/users/onboarding",
+      "purpose": "Normal user onboarding for people seeking support.",
+      "fields": [
+        "ageRange",
+        "languages",
+        "location",
+        "preferredGroupSize",
+        "primaryStruggles",
+        "optionalTags",
+        "description",
+        "completedAt"
+      ]
+    },
+    "therapistProfile": {
+      "route": "PATCH /api/therapists/profile",
+      "purpose": "Therapist onboarding and professional profile setup.",
+      "fields": [
+        "specializations",
+        "languages",
+        "experience",
+        "availability",
+        "licenseOrCertificateUrl",
+        "verificationStatus"
+      ],
+      "verification": "Verification is only needed for therapists and belongs inside therapistProfile, not as a general top-level user field."
+    },
+    "currentUserRoute": {
+      "route": "GET /api/auth/me",
+      "purpose": "Return the currently logged-in user's sanitized profile using the JWT token."
+    }
+  },
+  "forums": {
+    "currentStatus": "The forums module has started. Forum model, service, controller, routes, and seed script are being built.",
+    "model": {
+      "name": "Forum",
+      "fields": [
+        "name",
+        "slug",
+        "description",
+        "icon",
+        "tags",
+        "isActive",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "currentEndpoints": [
+      {
+        "method": "GET",
+        "path": "/api/forums",
+        "purpose": "List all active forums."
+      },
+      {
+        "method": "GET",
+        "path": "/api/forums/:forumId",
+        "purpose": "Get one forum by MongoDB id."
+      }
+    ],
+    "seedForums": [
+      "General",
+      "Anxiety",
+      "Loneliness",
+      "Burnout",
+      "Exam Stress",
+      "Grief",
+      "Relationship Issues",
+      "Chronic Illness",
+      "Social Anxiety",
+      "Career Stress"
+    ],
+    "futureForumFeatures": [
+      "Get forum by slug",
+      "Forum discussion posts",
+      "Comments or replies",
+      "Therapist-authored articles or guidance posts",
+      "Forum-wide meetings and webinars"
+    ]
+  },
+  "supportGroupMatching": {
+    "currentDecision": "Use tag-overlap matching rather than placing users into the first group with any matching tag.",
+    "flow": [
+      "User selects support tags.",
+      "Backend finds open support groups sorted by overlap score.",
+      "If a suitable group exists, the user joins the best available match.",
+      "If no suitable group has space, the user enters the waitlist.",
+      "If a waitlist cluster reaches 6 similar users, a new support group is created.",
+      "If an existing group later gets an empty spot, the backend fills it with the best-fit waitlisted user."
+    ],
+    "whyThisApproach": [
+      "It gives better matches than using any single matching tag.",
+      "It handles users who select multiple tags more fairly.",
+      "It is easier to explain in a demo.",
+      "It keeps the MVP realistic while still feeling intelligent."
+    ],
+    "groupCreationRule": "For MVP, create a new support group when 6 waitlisted users share a strong common tag cluster.",
+    "tagSelectionForNewGroup": "Use the top 1-2 most common tags among the waitlisted users instead of blindly combining every tag from every user.",
+    "example": {
+      "userSelectedTags": [
+        "anxiety",
+        "grief"
+      ],
+      "matchingPriority": [
+        "Groups tagged anxiety and grief",
+        "Groups tagged anxiety",
+        "Groups tagged grief"
+      ],
+      "ifNoGroupHasSpace": "User enters waitlist with selected tags and timestamp."
+    },
+    "futureModels": [
+      "SupportGroup",
+      "SupportGroupMembership",
+      "SupportGroupWaitlist",
+      "SupportGroupMessage",
+      "SupportGroupMeeting"
+    ]
+  },
+  "therapistRoleInSupportGroups": {
+    "rules": [
+      "Therapists may talk in support group chats like regular users when they choose to participate.",
+      "Users should clearly understand that support group therapists may not always be available.",
+      "Therapists may schedule support group meetings if they choose.",
+      "Therapists may create new support groups.",
+      "Therapist participation should be positioned as guidance or support, not emergency care."
+    ]
+  },
+  "aiFeatures": {
+    "plannedFeatures": [
+      "AI weekly chat summaries for therapists",
+      "AI community insights",
+      "AI-assisted harmful-message or self-harm risk detection",
+      "Guided prompt suggestions",
+      "Possibly on-device or privacy-preserving AI later"
+    ],
+    "implementationPriority": "AI features should be added after the core product loop works.",
+    "hackathonDemoOption": "A lightweight summary endpoint or mock AI summary can be used for the therapist dashboard demo."
+  },
+  "safetyAndScope": {
+    "positioning": "beanHelps is a peer-support and community platform, not an emergency response or crisis-care replacement.",
+    "importantDisclaimers": [
+      "The platform does not replace professional diagnosis or emergency treatment.",
+      "Users in immediate danger should be directed to local emergency resources.",
+      "Therapist participation may be voluntary and availability is not guaranteed.",
+      "Support groups should have community guidelines and reporting tools."
+    ],
+    "plannedSafetyFeatures": [
+      "Verified therapist profiles",
+      "Clear community guidelines",
+      "Report and moderation system",
+      "Harmful-message detection",
+      "Escalation resources for crisis language",
+      "Privacy-first group design"
+    ]
+  },
+  "technicalArchitecture": {
+    "languageAndDatabase": [
+      "JavaScript",
+      "MongoDB"
+    ],
+    "backendStack": [
+      "Node.js",
+      "Express",
+      "Mongoose",
+      "JWT authentication",
+      "bcryptjs password hashing",
+      "dotenv environment config",
+      "helmet",
+      "cors",
+      "morgan"
+    ],
+    "structure": {
+      "apps/api": "Backend API app.",
+      "apps/web": "Frontend web app.",
+      "apps/api/models": "Runtime Mongoose models used by the API.",
+      "apps/api/src/modules": "Feature modules such as auth, users, therapists, forums, support groups, meetings, chat, moderation, and summaries.",
+      "apps/api/src/config": "Environment, database, and logger setup.",
+      "apps/api/src/middleware": "Auth, role authorization, request validation, not-found, and error handling middleware.",
+      "apps/api/src/routes": "Central API route registration.",
+      "scripts": "Utility scripts such as forum seed scripts.",
+      "docs": "Project notes and structured documentation."
+    },
+    "containerization": {
+      "decision": "Docker and docker-compose can be added later.",
+      "reasoning": [
+        "The current structure is already container-friendly.",
+        "It is better to build core features first during the hackathon.",
+        "Environment config and app separation will make containerization easier later."
+      ]
+    }
+  },
+  "implementedSoFar": {
+    "backendFoundation": [
+      "Express app setup",
+      "MongoDB connection",
+      "Environment config",
+      "Global error handling",
+      "404 handling",
+      "Request validation middleware",
+      "Basic logger",
+      "Health route"
+    ],
+    "auth": [
+      "Signup",
+      "Login",
+      "Password hashing",
+      "JWT creation",
+      "JWT auth middleware",
+      "Role-based access middleware",
+      "GET /api/auth/me"
+    ],
+    "profiles": [
+      "Beaner onboarding route",
+      "Therapist profile route",
+      "Therapist verification status stored only inside therapistProfile"
+    ],
+    "forums": [
+      "Forum model",
+      "Forum list route",
+      "Forum detail route",
+      "Forum seed script started"
+    ]
+  },
+  "nextSteps": [
+    "Finish and test forum seed script.",
+    "Test GET /api/forums and GET /api/forums/:forumId.",
+    "Add get forum by slug for frontend-friendly URLs.",
+    "Create ForumPost model.",
+    "Add create/list forum discussion post routes.",
+    "Add comments or replies to forum posts.",
+    "Add forum meetings/webinars model and routes.",
+    "Build the support system module with tag-overlap matching and waitlist clustering.",
+    "Add support group chat after membership logic works.",
+    "Add therapist dashboard and AI summaries later."
+  ]
+}

@@ -1,7 +1,3 @@
-// auth.service.js
-// Contains the real auth logic like creating users, 
-// checking passwords, generating tokens.
-
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -15,18 +11,41 @@ const createToken = (userId) => {
   });
 };
 
-//sanitizeUser removes the user's sensitive data before 
-//sending it to the frontend
 const sanitizeUser = (user) => {
-  return {
+  const sanitizedUser = {
     id: user._id,
     name: user.name,
     email: user.email,
     role: user.role,
-    isVerified: user.isVerified,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
+
+  if (user.role === "beanpist" && user.therapistProfile) {
+    sanitizedUser.therapistProfile = {
+      verificationStatus: user.therapistProfile.verificationStatus,
+      specializations: user.therapistProfile.specializations,
+      languages: user.therapistProfile.languages,
+      experience: user.therapistProfile.experience,
+      availability: user.therapistProfile.availability,
+      licenseOrCertificateUrl: user.therapistProfile.licenseOrCertificateUrl,
+    };
+  }
+
+  if (user.onboardingProfile) {
+    sanitizedUser.onboardingProfile = {
+      ageRange: user.onboardingProfile.ageRange,
+      languages: user.onboardingProfile.languages,
+      location: user.onboardingProfile.location,
+      preferredGroupSize: user.onboardingProfile.preferredGroupSize,
+      primaryStruggles: user.onboardingProfile.primaryStruggles,
+      optionalTags: user.onboardingProfile.optionalTags,
+      description: user.onboardingProfile.description,
+      completedAt: user.onboardingProfile.completedAt,
+    };
+  }
+
+  return sanitizedUser;
 };
 
 const signupUser = async ({ name, email, password, role }) => {
@@ -46,7 +65,6 @@ const signupUser = async ({ name, email, password, role }) => {
   });
 
   const token = createToken(user._id);
-  //the mongodb id(unique) of the user is used to create his/her token
 
   return {
     user: sanitizeUser(user),
@@ -76,6 +94,7 @@ const loginUser = async ({ email, password }) => {
 };
 
 module.exports = {
+  sanitizeUser,
   signupUser,
   loginUser,
 };

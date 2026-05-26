@@ -27,7 +27,11 @@ const validateRequest = (schema) => {
         return;
       }
 
-      if (rules.type && typeof value !== rules.type) {
+      if (rules.type === "array" && !Array.isArray(value)) {
+        errors.push(`${field} must be an array`);
+      }
+
+      if (rules.type && rules.type !== "array" && typeof value !== rules.type) {
         errors.push(`${field} must be a ${rules.type}`);
       }
 
@@ -41,6 +45,14 @@ const validateRequest = (schema) => {
 
       if (rules.enum && !rules.enum.includes(value)) {
         errors.push(`${field} must be one of: ${rules.enum.join(", ")}`);
+      }
+
+      if (rules.itemType && Array.isArray(value)) {
+        const hasInvalidItem = value.some((item) => typeof item !== rules.itemType);
+
+        if (hasInvalidItem) {
+          errors.push(`${field} must contain only ${rules.itemType} values`);
+        }
       }
     });
 

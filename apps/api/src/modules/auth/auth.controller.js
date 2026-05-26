@@ -24,7 +24,18 @@ const login = asyncHandler(async (req, res) => {
   });
 });
 
+const getCurrentUser = asyncHandler(async (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Current user fetched successfully",
+    data: {
+      user: authService.sanitizeUser(req.user),
+    },
+  });
+});
+
 module.exports = {
   signup,
   login,
+  getCurrentUser,
 };
