@@ -1,0 +1,9 @@
+{
+  "name": "beanhelps-tempweb",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Temporary static frontend for demoing the BeanHelps backend.",
+  "scripts": {
+    "start": "python3 -m http.server 3000"
+  }
+}
