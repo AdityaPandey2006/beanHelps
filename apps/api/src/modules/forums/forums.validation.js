@@ -33,7 +33,55 @@ const createCommentValidation = {
   },
 };
 
+const createMeetingValidation = {
+  title: {
+    required: true,
+    type: "string",
+    minLength: 3,
+    maxLength: 120,
+  },
+  description: {
+    required: true,
+    type: "string",
+    minLength: 10,
+    maxLength: 1000,
+  },
+  meetingType: {
+    type: "string",
+    enum: ["webinar", "open_discussion", "workshop", "qna"],
+  },
+  mode: {
+    required: true,
+    type: "string",
+    enum: ["online", "offline", "hybrid"],
+  },
+  startsAt: {
+    required: true,
+    type: "string",
+  },
+  endsAt: {
+    required: true,
+    type: "string",
+  },
+  meetingLink: {
+    type: "string",
+    maxLength: 500,
+  },
+  location: {
+    type: "string",
+    maxLength: 300,
+  },
+  capacity: {
+    type: "number",
+  },
+  tags: {
+    type: "array",
+    itemType: "string",
+  },
+};
+
 module.exports = {
   createPostValidation,
   createCommentValidation,
+  createMeetingValidation,
 };

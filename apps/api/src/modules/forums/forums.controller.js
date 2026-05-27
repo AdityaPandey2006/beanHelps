@@ -85,6 +85,30 @@ const getComments = asyncHandler(async (req, res) => {
   });
 });
 
+const createMeeting = asyncHandler(async (req, res) => {
+  const meeting = await forumsService.createForumMeeting(req.params.forumId, req.user, req.body);
+
+  res.status(201).json({
+    success: true,
+    message: "Forum meeting created successfully",
+    data: {
+      meeting,
+    },
+  });
+});
+
+const getMeetings = asyncHandler(async (req, res) => {
+  const meetings = await forumsService.getForumMeetings(req.params.forumId);
+
+  res.status(200).json({
+    success: true,
+    message: "Forum meetings fetched successfully",
+    data: {
+      meetings,
+    },
+  });
+});
+
 module.exports = {
   getForums,
   getForum,
@@ -93,4 +117,6 @@ module.exports = {
   getPosts,
   createComment,
   getComments,
+  createMeeting,
+  getMeetings,
 };

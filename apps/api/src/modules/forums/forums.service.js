@@ -1,7 +1,10 @@
 const ApiError = require("../../utils/apiError");
 const Forum = require("../../../models/Forum");
+
 const ForumPost = require("../../../models/ForumPost");
 const ForumComment = require("../../../models/ForumComment");
+
+const ForumMeeting = require("../../../models/ForumMeeting");
 
 const getAllForums = async () => {
   return Forum.find({ isActive: true }).sort({ name: 1 });
@@ -120,6 +123,64 @@ const getForumPostComments = async (postId) => {
     .sort({ createdAt: 1 });
 };
 
+const createForumMeeting = async (forumId, host, payload) => {
+  const forum = await getForumById(forumId);
+
+  if (!["beanpist", "admin"].includes(host.role)) {
+    throw new ApiError(403, "Only therapists can create forum meetings");
+  }
+
+  const startsAt = new Date(payload.startsAt);
+  const endsAt = new Date(payload.endsAt);
+
+  if (Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime())) {
+    throw new ApiError(400, "Meeting start and end times must be valid dates");
+  }
+
+  if (endsAt <= startsAt) {
+    throw new ApiError(400, "Meeting end time must be after start time");
+  }
+
+  if (payload.mode === "online" && !payload.meetingLink) {
+    throw new ApiError(400, "Online meetings require a meeting link");
+  }
+
+  if (payload.mode === "offline" && !payload.location) {
+    throw new ApiError(400, "Offline meetings require a location");
+  }
+
+  const meeting = await ForumMeeting.create({
+    forum: forum._id,
+    host: host._id,
+    title: payload.title,
+    description: payload.description,
+    meetingType: payload.meetingType || "webinar",
+    mode: payload.mode,
+    startsAt,
+    endsAt,
+    meetingLink: payload.meetingLink || "",
+    location: payload.location || "",
+    capacity: payload.capacity || 100,
+    tags: payload.tags || [],
+  });
+
+  return ForumMeeting.findById(meeting._id)
+    .populate("host", "name role")
+    .populate("forum", "name slug");
+};
+
+const getForumMeetings = async (forumId) => {
+  await getForumById(forumId);
+
+  return ForumMeeting.find({
+    forum: forumId,
+    status: "scheduled",
+  })
+    .populate("host", "name role")
+    .populate("forum", "name slug")
+    .sort({ startsAt: 1 });
+};
+
 module.exports = {
   getAllForums,
   getForumById,
@@ -128,4 +189,6 @@ module.exports = {
   getForumPosts,
   createForumComment,
   getForumPostComments,
+  createForumMeeting,
+  getForumMeetings,
 };

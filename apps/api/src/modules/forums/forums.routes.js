@@ -3,11 +3,14 @@ const express = require("express");
 const auth = require("../../middleware/auth");
 const validateRequest = require("../../middleware/validateRequest");
 
-const { createPostValidation, createCommentValidation } = require("./forums.validation");
+const { createPostValidation, createCommentValidation,
+    createMeetingValidation,
+ } = require("./forums.validation");
 
 const { getForums, getForum, getForumBySlug,
     createPost, getPosts,
     createComment, getComments,
+    createMeeting, getMeetings,
  } = require("./forums.controller");
 
 const router = express.Router();
@@ -22,6 +25,9 @@ router.post("/posts/:postId/comments", auth, validateRequest(createCommentValida
 
 router.get("/:forumId/posts", getPosts);
 router.post("/:forumId/posts", auth, validateRequest(createPostValidation), createPost);
+
+router.get("/:forumId/meetings", getMeetings);
+router.post("/:forumId/meetings", auth, validateRequest(createMeetingValidation), createMeeting);
 
 router.get("/:forumId", getForum);
 
