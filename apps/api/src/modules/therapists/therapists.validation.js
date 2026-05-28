@@ -29,6 +29,15 @@ const therapistProfileValidation = {
   },
 };
 
+const updateTherapistVerificationValidation = {
+  verificationStatus: {
+    required: true,
+    type: "string",
+    enum: ["verified", "rejected", "pending"],
+  },
+};
+
 module.exports = {
   therapistProfileValidation,
+  updateTherapistVerificationValidation,
 };

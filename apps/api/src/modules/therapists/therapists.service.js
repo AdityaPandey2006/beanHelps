@@ -28,6 +28,36 @@ const updateTherapistProfile = async (userId, payload) => {
   return sanitizeUser(user);
 };
 
+const getPendingTherapists = async () => {
+  return User.find({
+    role: "beanpist",
+    "therapistProfile.verificationStatus": "pending",
+  }).select("-password");
+};
+
+const updateTherapistVerification = async (therapistId, payload) => {
+  const therapist = await User.findOne({
+    _id: therapistId,
+    role: "beanpist",
+  });
+
+  if (!therapist) {
+    throw new ApiError(404, "Therapist not found");
+  }
+
+  if (!therapist.therapistProfile) {
+    throw new ApiError(400, "Therapist profile has not been completed");
+  }
+
+  therapist.therapistProfile.verificationStatus = payload.verificationStatus;
+
+  await therapist.save();
+
+  return sanitizeUser(therapist);
+};
+
 module.exports = {
   updateTherapistProfile,
+  getPendingTherapists,
+  updateTherapistVerification,
 };

@@ -3,8 +3,9 @@ const express = require("express");
 const auth = require("../../middleware/auth");
 const authorizeRoles = require("../../middleware/authorizeRoles");
 const validateRequest = require("../../middleware/validateRequest");
-const { therapistProfileValidation } = require("./therapists.validation");
-const { updateTherapistProfile } = require("./therapists.controller");
+const { therapistProfileValidation, updateTherapistVerificationValidation, } = require("./therapists.validation");
+const { updateTherapistProfile, getPendingTherapists, updateTherapistVerification } = require("./therapists.controller");
+
 
 const router = express.Router();
 
@@ -14,6 +15,21 @@ router.patch(
   authorizeRoles("beanpist"),
   validateRequest(therapistProfileValidation),
   updateTherapistProfile
+);
+
+router.get(
+  "/pending",
+  auth,
+  authorizeRoles("admin"),
+  getPendingTherapists
+);
+
+router.patch(
+  "/:therapistId/verification",
+  auth,
+  authorizeRoles("admin"),
+  validateRequest(updateTherapistVerificationValidation),
+  updateTherapistVerification
 );
 
 module.exports = router;
