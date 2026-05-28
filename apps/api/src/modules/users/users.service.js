@@ -5,6 +5,7 @@ const ForumMembership = require("../../../models/ForumMembership");
 const SupportGroupMembership = require("../../../models/SupportGroupMembership");
 const SupportGroupWaitlist = require("../../../models/SupportGroupWaitlist");
 const SupportGroupMeeting = require("../../../models/SupportGroupMeeting");
+const ForumMeetingRegistration = require("../../../models/ForumMeetingRegistration");
 const { sanitizeUser } = require("../auth/auth.service");
 
 const normalizeTags = (tags = []) => {
@@ -119,6 +120,34 @@ const getUpcomingSupportGroupMeetings = async (supportGroupId) => {
     .limit(5);
 };
 
+const getUpcomingForumMeetingsForBeaner = async (userId) => {
+  const registrations = await ForumMeetingRegistration.find({
+    user: userId,
+    status: "registered",
+  })
+    .populate({
+      path: "meeting",
+      match: {
+        status: "scheduled",
+        startsAt: { $gte: new Date() },
+      },
+      populate: [
+        { path: "forum", select: "name slug" },
+        { path: "host", select: "name role" },
+      ],
+    })
+    .sort({ registeredAt: -1 })
+    .limit(10);
+
+  return registrations
+    .filter((registration) => registration.meeting)
+    .map((registration) => ({
+      registrationId: registration._id,
+      registeredAt: registration.registeredAt,
+      meeting: registration.meeting,
+    }));
+};
+
 const getBeanerHome = async (userId) => {
   const user = await User.findById(userId);
 
@@ -138,6 +167,7 @@ const getBeanerHome = async (userId) => {
   const upcomingSupportGroupMeetings = await getUpcomingSupportGroupMeetings(
     supportGroup?.group?._id
   );
+  const upcomingForumMeetings = await getUpcomingForumMeetingsForBeaner(user._id);
 
   return {
     user: sanitizeUser(user),
@@ -145,6 +175,7 @@ const getBeanerHome = async (userId) => {
     recommendedForums,
     supportGroup,
     waitlistStatus,
+    upcomingForumMeetings,
     upcomingSupportGroupMeetings,
   };
 };

@@ -11,6 +11,7 @@ const { getForums, getForum, getForumBySlug,
     createPost, getPosts,
     createComment, getComments,
     createMeeting, getMeetings,
+    joinMeeting, leaveMeeting, getMyMeetingRegistrations,
     getMyForums, getExploreForums, getRecommendedForums, joinForum, leaveForum, joinRecommendedForums,
  } = require("./forums.controller");
 
@@ -26,6 +27,10 @@ router.get("/explore", auth, getExploreForums);
 
 router.get("/recommended", auth, getRecommendedForums);
 router.post("/recommended/join-all", auth, joinRecommendedForums);
+
+router.get("/meetings/my", auth, getMyMeetingRegistrations);
+router.post("/meetings/:meetingId/join", auth, joinMeeting);
+router.post("/meetings/:meetingId/leave", auth, leaveMeeting);
 
 router.post("/:forumId/join", auth, joinForum);
 router.post("/:forumId/leave", auth, leaveForum);

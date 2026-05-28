@@ -109,6 +109,48 @@ const getMeetings = asyncHandler(async (req, res) => {
   });
 });
 
+const joinMeeting = asyncHandler(async (req, res) => {
+  const registration = await forumsService.joinForumMeeting(
+    req.params.meetingId,
+    req.user
+  );
+
+  res.status(200).json({
+    success: true,
+    message: "Joined forum meeting successfully",
+    data: {
+      registration,
+    },
+  });
+});
+
+const leaveMeeting = asyncHandler(async (req, res) => {
+  const registration = await forumsService.leaveForumMeeting(
+    req.params.meetingId,
+    req.user
+  );
+
+  res.status(200).json({
+    success: true,
+    message: "Left forum meeting successfully",
+    data: {
+      registration,
+    },
+  });
+});
+
+const getMyMeetingRegistrations = asyncHandler(async (req, res) => {
+  const registrations = await forumsService.getMyForumMeetingRegistrations(req.user);
+
+  res.status(200).json({
+    success: true,
+    message: "My forum meeting registrations fetched successfully",
+    data: {
+      registrations,
+    },
+  });
+});
+
 const getMyForums = asyncHandler(async (req, res) => {
   const forums = await forumsService.getMyForums(req.user);
 
@@ -191,6 +233,9 @@ module.exports = {
   getComments,
   createMeeting,
   getMeetings,
+  joinMeeting,
+  leaveMeeting,
+  getMyMeetingRegistrations,
   getMyForums,
   getExploreForums,
   getRecommendedForums,

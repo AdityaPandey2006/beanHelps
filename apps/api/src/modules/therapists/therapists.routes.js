@@ -3,11 +3,25 @@ const express = require("express");
 const auth = require("../../middleware/auth");
 const authorizeRoles = require("../../middleware/authorizeRoles");
 const validateRequest = require("../../middleware/validateRequest");
-const { therapistProfileValidation, updateTherapistVerificationValidation, } = require("./therapists.validation");
-const { updateTherapistProfile, getPendingTherapists, updateTherapistVerification } = require("./therapists.controller");
-
+const {
+  therapistProfileValidation,
+  updateTherapistVerificationValidation,
+} = require("./therapists.validation");
+const {
+  updateTherapistProfile,
+  getPendingTherapists,
+  updateTherapistVerification,
+  getTherapistDashboard,
+} = require("./therapists.controller");
 
 const router = express.Router();
+
+router.get(
+  "/dashboard",
+  auth,
+  authorizeRoles("beanpist"),
+  getTherapistDashboard
+);
 
 router.patch(
   "/profile",

@@ -40,8 +40,19 @@ const updateTherapistVerification = asyncHandler(async (req, res) => {
   });
 });
 
+const getTherapistDashboard = asyncHandler(async (req, res) => {
+  const dashboard = await therapistsService.getTherapistDashboard(req.user._id);
+
+  res.status(200).json({
+    success: true,
+    message: "Therapist dashboard fetched successfully",
+    data: dashboard,
+  });
+});
+
 module.exports = {
   updateTherapistProfile,
   getPendingTherapists,
   updateTherapistVerification,
+  getTherapistDashboard,
 };

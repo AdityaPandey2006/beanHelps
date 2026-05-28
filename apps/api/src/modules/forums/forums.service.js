@@ -5,6 +5,7 @@ const ForumPost = require("../../../models/ForumPost");
 const ForumComment = require("../../../models/ForumComment");
 
 const ForumMeeting = require("../../../models/ForumMeeting");
+const ForumMeetingRegistration = require("../../../models/ForumMeetingRegistration");
 
 const ForumMembership = require("../../../models/ForumMembership");
 
@@ -191,6 +192,138 @@ const getForumMeetings = async (forumId) => {
     .sort({ startsAt: 1 });
 };
 
+const getForumMeetingById = async (meetingId) => {
+  const meeting = await ForumMeeting.findOne({
+    _id: meetingId,
+    status: "scheduled",
+  });
+
+  if (!meeting) {
+    throw new ApiError(404, "Forum meeting not found");
+  }
+
+  return meeting;
+};
+
+const joinForumMeeting = async (meetingId, user) => {
+  if (!["beaner", "beanpist"].includes(user.role)) {
+    throw new ApiError(403, "Only beaners and beanpists can join forum meetings");
+  }
+
+  const meeting = await getForumMeetingById(meetingId);
+
+  if (meeting.host?.toString() === user._id.toString()) {
+    throw new ApiError(409, "Meeting hosts do not need to join their own meeting");
+  }
+
+  const now = new Date();
+
+  if (meeting.endsAt <= now) {
+    throw new ApiError(400, "Cannot join a meeting that has already ended");
+  }
+
+  const activeRegistrationCount = await ForumMeetingRegistration.countDocuments({
+    meeting: meeting._id,
+    status: "registered",
+  });
+
+  if (activeRegistrationCount >= meeting.capacity) {
+    throw new ApiError(400, "This meeting is already full");
+  }
+
+  const existingRegistration = await ForumMeetingRegistration.findOne({
+    meeting: meeting._id,
+    user: user._id,
+  });
+
+  if (existingRegistration?.status === "registered") {
+    throw new ApiError(409, "You have already joined this meeting");
+  }
+
+  if (existingRegistration) {
+    existingRegistration.status = "registered";
+    existingRegistration.registeredAt = new Date();
+    existingRegistration.cancelledAt = null;
+    await existingRegistration.save();
+
+    return existingRegistration.populate([
+      {
+        path: "meeting",
+        populate: [
+          { path: "forum", select: "name slug" },
+          { path: "host", select: "name role" },
+        ],
+      },
+      { path: "user", select: "name role" },
+    ]);
+  }
+
+  const registration = await ForumMeetingRegistration.create({
+    meeting: meeting._id,
+    user: user._id,
+  });
+
+  return registration.populate([
+    {
+      path: "meeting",
+      populate: [
+        { path: "forum", select: "name slug" },
+        { path: "host", select: "name role" },
+      ],
+    },
+    { path: "user", select: "name role" },
+  ]);
+};
+
+const leaveForumMeeting = async (meetingId, user) => {
+  const registration = await ForumMeetingRegistration.findOne({
+    meeting: meetingId,
+    user: user._id,
+    status: "registered",
+  });
+
+  if (!registration) {
+    throw new ApiError(404, "Active meeting registration not found");
+  }
+
+  registration.status = "cancelled";
+  registration.cancelledAt = new Date();
+  await registration.save();
+
+  return registration.populate([
+    {
+      path: "meeting",
+      populate: [
+        { path: "forum", select: "name slug" },
+        { path: "host", select: "name role" },
+      ],
+    },
+    { path: "user", select: "name role" },
+  ]);
+};
+
+const getMyForumMeetingRegistrations = async (user) => {
+  return ForumMeetingRegistration.find({
+    user: user._id,
+    status: "registered",
+  })
+    .populate({
+      path: "meeting",
+      match: {
+        status: "scheduled",
+        startsAt: { $gte: new Date() },
+      },
+      populate: [
+        { path: "forum", select: "name slug" },
+        { path: "host", select: "name role" },
+      ],
+    })
+    .sort({ registeredAt: -1 })
+    .then((registrations) =>
+      registrations.filter((registration) => registration.meeting)
+    );
+};
+
 const getMyForums = async (user) => {
   if (user.role === "beanpist") {
     return Forum.find({
@@ -373,6 +506,9 @@ module.exports = {
   getForumPostComments,
   createForumMeeting,
   getForumMeetings,
+  joinForumMeeting,
+  leaveForumMeeting,
+  getMyForumMeetingRegistrations,
   getMyForums,
   getExploreForums,
   joinForum,
