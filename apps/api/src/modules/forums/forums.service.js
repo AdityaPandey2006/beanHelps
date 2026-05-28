@@ -65,7 +65,7 @@ const createForumPost = async (forumId, author, payload) => {
 const getForumPosts = async (forumId) => {
   await getForumById(forumId);
 
-  return ForumPost.find({ forum: forumId })
+  return ForumPost.find({ forum: forumId, isDeleted: false })
     .populate("author", "name role")
     .populate("forum", "name slug")
     .sort({ isPinned: -1, createdAt: -1 });
