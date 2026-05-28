@@ -109,6 +109,78 @@ const getMeetings = asyncHandler(async (req, res) => {
   });
 });
 
+const getMyForums = asyncHandler(async (req, res) => {
+  const forums = await forumsService.getMyForums(req.user);
+
+  res.status(200).json({
+    success: true,
+    message: "My forums fetched successfully",
+    data: {
+      forums,
+    },
+  });
+});
+
+const getExploreForums = asyncHandler(async (req, res) => {
+  const forums = await forumsService.getExploreForums(req.user);
+
+  res.status(200).json({
+    success: true,
+    message: "Explore forums fetched successfully",
+    data: {
+      forums,
+    },
+  });
+});
+
+const getRecommendedForums = asyncHandler(async (req, res) => {
+  const forums = await forumsService.getRecommendedForums(req.user);
+
+  res.status(200).json({
+    success: true,
+    message: "Recommended forums fetched successfully",
+    data: {
+      forums,
+    },
+  });
+});
+
+const joinForum = asyncHandler(async (req, res) => {
+  const membership = await forumsService.joinForum(req.params.forumId, req.user);
+
+  res.status(200).json({
+    success: true,
+    message: "Joined forum successfully",
+    data: {
+      membership,
+    },
+  });
+});
+
+const leaveForum = asyncHandler(async (req, res) => {
+  const membership = await forumsService.leaveForum(req.params.forumId, req.user);
+
+  res.status(200).json({
+    success: true,
+    message: "Left forum successfully",
+    data: {
+      membership,
+    },
+  });
+});
+
+const joinRecommendedForums = asyncHandler(async (req, res) => {
+  const memberships = await forumsService.joinRecommendedForums(req.user);
+
+  res.status(200).json({
+    success: true,
+    message: "Joined recommended forums successfully",
+    data: {
+      memberships,
+    },
+  });
+});
+
 module.exports = {
   getForums,
   getForum,
@@ -119,4 +191,10 @@ module.exports = {
   getComments,
   createMeeting,
   getMeetings,
+  getMyForums,
+  getExploreForums,
+  getRecommendedForums,
+  joinForum,
+  leaveForum,
+  joinRecommendedForums,
 };

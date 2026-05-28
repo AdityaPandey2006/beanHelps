@@ -39,6 +39,10 @@ const forumSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    isFeatured: {
+      type: Boolean,
+      default: true,
+    },
   },
   {
     timestamps: true,

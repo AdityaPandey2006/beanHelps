@@ -11,11 +11,25 @@ const errorHandler = require("./middleware/errorHandler");
 const app = express();
 
 app.use(helmet());
+
+const allowedOrigins = [
+  env.clientUrl,
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: env.clientUrl,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
   })
 );
+
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

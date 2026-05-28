@@ -6,6 +6,8 @@ const ForumComment = require("../../../models/ForumComment");
 
 const ForumMeeting = require("../../../models/ForumMeeting");
 
+const ForumMembership = require("../../../models/ForumMembership");
+
 const getAllForums = async () => {
   return Forum.find({ isActive: true }).sort({ name: 1 });
 };
@@ -181,6 +183,178 @@ const getForumMeetings = async (forumId) => {
     .sort({ startsAt: 1 });
 };
 
+const getMyForums = async (user) => {
+  if (user.role === "beanpist") {
+    return Forum.find({
+      isActive: true,
+      isFeatured: true,
+    }).sort({ name: 1 });
+  }
+
+  const memberships = await ForumMembership.find({
+    user: user._id,
+    status: "active",
+  })
+    .populate("forum")
+    .sort({ joinedAt: -1 });
+
+  return memberships
+    .map((membership) => membership.forum)
+    .filter((forum) => forum?.isActive);
+};
+
+const getExploreForums = async (user) => {
+  if (user.role === "beanpist") {
+    return Forum.find({
+      isActive: true,
+      isFeatured: true,
+    }).sort({ name: 1 });
+  }
+
+  const memberships = await ForumMembership.find({
+    user: user._id,
+    status: "active",
+  }).select("forum");
+
+  const joinedForumIds = memberships.map((membership) => membership.forum);
+
+  return Forum.find({
+    _id: { $nin: joinedForumIds },
+    isActive: true,
+  }).sort({ isFeatured: -1, name: 1 });
+};
+
+const getRecommendedForums = async (user) => {
+  if (user.role === "beanpist") {
+    return Forum.find({
+      isActive: true,
+      isFeatured: true,
+    }).sort({ name: 1 });
+  }
+
+  const primaryStruggles = user.onboardingProfile?.primaryStruggles || [];
+
+  if (!primaryStruggles.length) {
+    return Forum.find({
+      isActive: true,
+      isFeatured: true,
+    }).sort({ name: 1 });
+  }
+
+  const normalizedStruggles = primaryStruggles.map((struggle) =>
+    struggle.trim().toLowerCase()
+  );
+
+  const memberships = await ForumMembership.find({
+    user: user._id,
+    status: "active",
+  }).select("forum");
+
+  const joinedForumIds = memberships.map((membership) => membership.forum);
+
+  return Forum.find({
+    _id: { $nin: joinedForumIds },
+    isActive: true,
+    tags: { $in: normalizedStruggles },
+  }).sort({ isFeatured: -1, name: 1 });
+};
+
+const joinForum = async (forumId, user) => {
+  if (user.role !== "beaner") {
+    throw new ApiError(403, "Only beaners need to manually join forums");
+  }
+
+  const forum = await getForumById(forumId);
+
+  const existingMembership = await ForumMembership.findOne({
+    forum: forum._id,
+    user: user._id,
+  });
+
+  if (existingMembership?.status === "active") {
+    throw new ApiError(409, "You are already part of this forum");
+  }
+
+  if (existingMembership) {
+    existingMembership.status = "active";
+    existingMembership.leftAt = null;
+    existingMembership.joinedAt = new Date();
+    await existingMembership.save();
+
+    return existingMembership.populate("forum");
+  }
+
+  const membership = await ForumMembership.create({
+    forum: forum._id,
+    user: user._id,
+    role: "member",
+  });
+
+  return membership.populate("forum");
+};
+
+const leaveForum = async (forumId, user) => {
+  if (user.role !== "beaner") {
+    throw new ApiError(403, "Only beaners can leave forums manually");
+  }
+
+  const membership = await ForumMembership.findOne({
+    forum: forumId,
+    user: user._id,
+    status: "active",
+  });
+
+  if (!membership) {
+    throw new ApiError(404, "Active forum membership not found");
+  }
+
+  membership.status = "left";
+  membership.leftAt = new Date();
+  await membership.save();
+
+  return membership.populate("forum");
+};
+
+const joinRecommendedForums = async (user) => {
+  if (user.role !== "beaner") {
+    throw new ApiError(403, "Only beaners can join recommended forums");
+  }
+
+  const forums = await getRecommendedForums(user);
+
+  const memberships = [];
+
+  for (const forum of forums) {
+    const membership = await ForumMembership.findOneAndUpdate(
+      {
+        forum: forum._id,
+        user: user._id,
+      },
+      {
+        forum: forum._id,
+        user: user._id,
+        role: "member",
+        status: "active",
+        leftAt: null,
+        joinedAt: new Date(),
+      },
+      {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true,
+      }
+    ).populate("forum");
+
+    memberships.push(membership);
+  }
+
+  return memberships;
+};
+
+
+
+
+
 module.exports = {
   getAllForums,
   getForumById,
@@ -191,4 +365,10 @@ module.exports = {
   getForumPostComments,
   createForumMeeting,
   getForumMeetings,
+  getMyForums,
+  getExploreForums,
+  joinForum,
+  leaveForum,
+  joinRecommendedForums,
+  getRecommendedForums,
 };
