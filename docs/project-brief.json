@@ -46,7 +46,7 @@
         "Access support group meetings/chat when assigned as group therapist",
         "View therapist dashboard once teammate completes that module"
       ],
-      "verification": "Therapist verification lives inside therapistProfile.verificationStatus. Admin verification routes are still pending."
+      "verification": "Therapist verification lives inside therapistProfile.verificationStatus. Admins can list pending therapists and update verification status through implemented backend routes."
     },
     "admin": {
       "meaning": "Platform administrator.",
@@ -54,7 +54,8 @@
         "Moderate reports",
         "View all reports",
         "Apply report actions",
-        "Eventually verify therapists"
+        "List pending therapist profiles",
+        "Verify, reject, or return therapist verification status to pending"
       ],
       "securityNote": "Admin should not be available from public signup in production."
     }
@@ -346,7 +347,9 @@
       "PATCH /api/users/onboarding"
     ],
     "therapists": [
-      "PATCH /api/therapists/profile"
+      "PATCH /api/therapists/profile",
+      "GET /api/therapists/pending",
+      "PATCH /api/therapists/:therapistId/verification"
     ],
     "forums": [
       "GET /api/forums",
@@ -447,7 +450,6 @@
       "meaningOfAssignedSupportGroups": "Support groups where SupportGroup.therapist equals the therapist user's id."
     },
     "otherUsefulParallelTasks": [
-      "Therapist verification admin routes",
       "Beaner home aggregate endpoint",
       "Frontend onboarding forms wired to existing APIs",
       "Frontend forum membership home/explore screens",
@@ -456,7 +458,6 @@
     ]
   },
   "nextBackendSteps": [
-    "Add admin therapist verification routes: GET /api/therapists/pending and PATCH /api/therapists/:therapistId/verification.",
     "Add beaner home aggregate endpoint if frontend needs a single dashboard payload.",
     "Finish testing report actions and ensure hidden forum posts are filtered from forum post lists.",
     "Verify support group chat routes with beaner member, assigned therapist, and admin tokens.",
