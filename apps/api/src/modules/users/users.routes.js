@@ -4,9 +4,16 @@ const auth = require("../../middleware/auth");
 const authorizeRoles = require("../../middleware/authorizeRoles");
 const validateRequest = require("../../middleware/validateRequest");
 const { onboardingValidation } = require("./users.validation");
-const { updateOnboarding } = require("./users.controller");
+const { updateOnboarding, getBeanerHome } = require("./users.controller");
 
 const router = express.Router();
+
+router.get(
+  "/home",
+  auth,
+  authorizeRoles("beaner"),
+  getBeanerHome
+);
 
 router.patch(
   "/onboarding",

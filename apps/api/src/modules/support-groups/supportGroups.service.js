@@ -538,8 +538,8 @@ const ensureCanCreateGroupMeeting = async (user, group) => {
   }
 
   if (isSameObjectId(group.therapist?._id || group.therapist, user._id)) {
-  ensureVerifiedTherapist(user);
-  return;
+    ensureVerifiedTherapist(user);
+    return;
   }
 
   const membership = await ensureActiveGroupMember(user._id, group._id);

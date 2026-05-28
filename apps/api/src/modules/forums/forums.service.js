@@ -55,7 +55,7 @@ const createForumPost = async (forumId, author, payload) => {
   const forum = await getForumById(forumId);
 
   if (["therapist_article", "resource"].includes(payload.type)) {
-  ensureVerifiedTherapist(author);
+    ensureVerifiedTherapist(author);
   }
 
   const post = await ForumPost.create({
