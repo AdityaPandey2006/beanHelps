@@ -44,6 +44,19 @@ const isSameObjectId = (firstId, secondId) => {
   return firstId?.toString() === secondId?.toString();
 };
 
+const ensureVerifiedTherapist = (user) => {
+  if (user.role === "admin") {
+    return;
+  }
+
+  if (
+    user.role !== "beanpist" ||
+    user.therapistProfile?.verificationStatus !== "verified"
+  ) {
+    throw new ApiError(403, "Only verified therapists can perform this action");
+  }
+};
+
 const getSupportGroups = async (filters = {}) => {
   const query = {
     isActive: true,
@@ -323,9 +336,7 @@ const matchSupportGroup = async (user, payload) => {
 };
 
 const createSupportGroup = async (creator, payload) => {
-  if (!["beanpist", "admin"].includes(creator.role)) {
-    throw new ApiError(403, "Only therapists can create support groups");
-  }
+  ensureVerifiedTherapist(creator);
 
   const tags = normalizeTags(payload.tags);
 
@@ -527,7 +538,8 @@ const ensureCanCreateGroupMeeting = async (user, group) => {
   }
 
   if (isSameObjectId(group.therapist?._id || group.therapist, user._id)) {
-    return;
+  ensureVerifiedTherapist(user);
+  return;
   }
 
   const membership = await ensureActiveGroupMember(user._id, group._id);
@@ -543,6 +555,7 @@ const ensureCanViewGroupMeetings = async (user, group) => {
   }
 
   if (isSameObjectId(group.therapist?._id || group.therapist, user._id)) {
+    ensureVerifiedTherapist(user);
     return;
   }
 
@@ -616,6 +629,7 @@ const ensureCanAccessGroupChat = async (user, group) => {
   }
 
   if (isSameObjectId(group.therapist?._id || group.therapist, user._id)) {
+    ensureVerifiedTherapist(user);
     return;
   }
 

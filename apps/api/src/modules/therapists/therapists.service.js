@@ -13,6 +13,16 @@ const updateTherapistProfile = async (userId, payload) => {
     throw new ApiError(403, "Only therapists can update therapist profiles");
   }
 
+  const currentVerificationStatus =
+    user.therapistProfile?.verificationStatus || "pending";
+
+  if (currentVerificationStatus !== "pending") {
+    throw new ApiError(
+      403,
+      "Therapist profile can only be updated while verification is pending"
+    );
+  }
+
   user.therapistProfile = {
     ...user.therapistProfile?.toObject?.(),
     specializations: payload.specializations,
@@ -20,7 +30,7 @@ const updateTherapistProfile = async (userId, payload) => {
     experience: payload.experience,
     availability: payload.availability,
     licenseOrCertificateUrl: payload.licenseOrCertificateUrl,
-    verificationStatus: user.therapistProfile?.verificationStatus || "pending",
+    verificationStatus: "pending",
   };
 
   await user.save();

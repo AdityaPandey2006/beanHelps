@@ -8,6 +8,19 @@ const ForumMeeting = require("../../../models/ForumMeeting");
 
 const ForumMembership = require("../../../models/ForumMembership");
 
+const ensureVerifiedTherapist = (user) => {
+  if (user.role === "admin") {
+    return;
+  }
+
+  if (
+    user.role !== "beanpist" ||
+    user.therapistProfile?.verificationStatus !== "verified"
+  ) {
+    throw new ApiError(403, "Only verified therapists can perform this action");
+  }
+};
+
 const getAllForums = async () => {
   return Forum.find({ isActive: true }).sort({ name: 1 });
 };
@@ -41,11 +54,8 @@ const getForumBySlug = async (slug) => {
 const createForumPost = async (forumId, author, payload) => {
   const forum = await getForumById(forumId);
 
-  if (
-    ["therapist_article", "resource"].includes(payload.type) &&
-    !["beanpist", "admin"].includes(author.role)
-  ) {
-    throw new ApiError(403, "Only therapists can create therapist articles or resources");
+  if (["therapist_article", "resource"].includes(payload.type)) {
+  ensureVerifiedTherapist(author);
   }
 
   const post = await ForumPost.create({
@@ -128,9 +138,7 @@ const getForumPostComments = async (postId) => {
 const createForumMeeting = async (forumId, host, payload) => {
   const forum = await getForumById(forumId);
 
-  if (!["beanpist", "admin"].includes(host.role)) {
-    throw new ApiError(403, "Only therapists can create forum meetings");
-  }
+  ensureVerifiedTherapist(host);
 
   const startsAt = new Date(payload.startsAt);
   const endsAt = new Date(payload.endsAt);
