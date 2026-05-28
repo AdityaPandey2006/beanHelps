@@ -1,42 +1,49 @@
-//this file basically connects the frontend to the backend 
-// and makes request sending to the backend easier
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
-const getToken = () => {
-  return localStorage.getItem("beanhelps_token");
-};
+const TOKEN_KEY = "beanhelps_token";
 
-const request = async (path, options = {}) => {
+export function getToken() {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function setToken(token) {
+  if (token) {
+    localStorage.setItem(TOKEN_KEY, token);
+  } else {
+    localStorage.removeItem(TOKEN_KEY);
+  }
+}
+
+export async function api(path, options = {}) {
   const token = getToken();
-
+  const isFormData = options.body instanceof FormData;
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
-      "Content-Type": "application/json",
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
   });
 
-  const data = await response.json();
+  const payload = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(data.message || "Something went wrong");
+    const message = payload.message || "Something went wrong";
+    const error = new Error(message);
+    error.status = response.status;
+    error.payload = payload;
+    throw error;
   }
 
-  return data;
-};
+  return payload.data ?? payload;
+}
 
-export const api = {
-  get: (path) => request(path),
-  post: (path, body) =>
-    request(path, {
-      method: "POST",
-      body: JSON.stringify(body),
-    }),
-  patch: (path, body) =>
-    request(path, {
-      method: "PATCH",
-      body: JSON.stringify(body),
-    }),
+export const authApi = {
+  login: (body) =>
+    api("/auth/login", { method: "POST", body: JSON.stringify(body) }),
+  signup: (body) =>
+    api("/auth/signup", { method: "POST", body: JSON.stringify(body) }),
+  me: () => api("/auth/me"),
 };

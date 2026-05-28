@@ -2,9 +2,36 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>web</title>
+    <meta
+      name="description"
+      content="beanHelps is a structured peer-support platform for calmer forums, support circles, and therapist-guided meetings."
+    />
+    <title>beanHelps</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              bean: {
+                ink: "#213237",
+                muted: "#63757a",
+                cream: "#f8fbf8",
+                mist: "#e9f4f0",
+                sage: "#87b7a3",
+                teal: "#2f7c7a",
+                sky: "#dcecf7",
+                coral: "#e18b7b"
+              }
+            },
+            boxShadow: {
+              soft: "0 18px 60px rgba(32, 64, 70, 0.11)"
+            }
+          }
+        }
+      };
+    </script>
   </head>
   <body>
     <div id="root"></div>
