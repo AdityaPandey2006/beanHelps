@@ -46,7 +46,7 @@
         "Access support group meetings/chat when assigned as group therapist",
         "View therapist dashboard once teammate completes that module"
       ],
-      "verification": "Therapist verification lives inside therapistProfile.verificationStatus. Admins can list pending therapists and update verification status through implemented backend routes."
+      "verification": "Therapist verification lives inside therapistProfile.verificationStatus. Admins can list pending therapists and update verification status through implemented backend routes. For the MVP, pending therapists may complete/update their profile, verified therapists can use therapist powers, and rejected therapists can log in but cannot resubmit or use therapist-only actions."
     },
     "admin": {
       "meaning": "Platform administrator.",
@@ -106,6 +106,16 @@
         "Changing recurrence midway while preserving history"
       ],
       "futureArchitecture": "Use SupportGroupMeetingSeries and SupportGroupMeetingOccurrence if advanced scheduling is needed."
+    },
+    "therapistVerificationMvp": {
+      "decision": "Only verified beanpists can perform therapist-only actions. Pending beanpists can finish their profile while waiting for admin review. Rejected beanpists remain able to log in, but cannot resubmit their therapist profile in the MVP.",
+      "therapistOnlyActions": [
+        "Create therapist articles/resources in forums",
+        "Create forum-wide meetings/webinars",
+        "Create therapist-led support groups",
+        "Use assigned-therapist access for support group meetings/chat"
+      ],
+      "frontendBehavior": "Rejected beanpists are routed to the therapist home status screen instead of therapist onboarding."
     }
   },
   "backendArchitecture": {
@@ -402,16 +412,17 @@
       "API client",
       "Role/onboarding redirect helper",
       "Placeholder beaner onboarding page",
-      "Placeholder therapist onboarding page",
+      "Therapist onboarding route guards rejected or already-completed profiles",
       "Placeholder beaner home",
-      "Placeholder therapist home"
+      "Therapist home shows pending/rejected verification states"
     ],
     "routingDecision": {
       "afterLoginOrSignup": "Frontend calls GET /api/auth/me then routes using getNextRoute(user).",
       "beanerNotOnboarded": "/onboarding/beaner",
       "beanerOnboarded": "/home",
       "beanpistNotOnboarded": "/onboarding/therapist",
-      "beanpistOnboarded": "/therapist/home"
+      "beanpistOnboarded": "/therapist/home",
+      "beanpistRejected": "/therapist/home"
     },
     "designDirection": "The frontend is moving toward the parchment/heritage visual identity from the team PDF with the beanHelps logo asset in apps/web/src/assets/beanhelps-logo.png."
   },
