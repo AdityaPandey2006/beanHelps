@@ -43,11 +43,19 @@ const forumSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
   },
   {
     timestamps: true,
   }
 );
+
+forumSchema.index({ isFeatured: 1, isActive: 1 });
+forumSchema.index({ createdBy: 1 });
 
 const Forum = mongoose.model("Forum", forumSchema);
 

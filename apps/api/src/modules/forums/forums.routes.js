@@ -1,13 +1,15 @@
 const express = require("express");
 
 const auth = require("../../middleware/auth");
+const authorizeRoles = require("../../middleware/authorizeRoles");
 const validateRequest = require("../../middleware/validateRequest");
 
-const { createPostValidation, createCommentValidation,
+const { createForumValidation, createPostValidation, createCommentValidation,
     createMeetingValidation,
  } = require("./forums.validation");
 
 const { getForums, getForum, getForumBySlug,
+    createForum,
     createPost, getPosts,
     createComment, getComments,
     createMeeting, getMeetings,
@@ -17,6 +19,13 @@ const { getForums, getForum, getForumBySlug,
 const router = express.Router();
 
 router.get("/", getForums);
+router.post(
+  "/",
+  auth,
+  authorizeRoles("beanpist", "admin"),
+  validateRequest(createForumValidation),
+  createForum
+);
 router.get("/slug/:slug", getForumBySlug);
 //this has to be kept before the /:forumId or the router will think 
 // "slug" is a forumId and will give wrong answer everytime
@@ -37,7 +46,13 @@ router.get("/:forumId/posts", getPosts);
 router.post("/:forumId/posts", auth, validateRequest(createPostValidation), createPost);
 
 router.get("/:forumId/meetings", getMeetings);
-router.post("/:forumId/meetings", auth, validateRequest(createMeetingValidation), createMeeting);
+router.post(
+  "/:forumId/meetings",
+  auth,
+  authorizeRoles("beanpist", "admin"),
+  validateRequest(createMeetingValidation),
+  createMeeting
+);
 
 router.get("/:forumId", getForum);
 

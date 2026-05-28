@@ -1,3 +1,31 @@
+const createForumValidation = {
+  name: {
+    required: true,
+    type: "string",
+    minLength: 2,
+    maxLength: 50,
+  },
+  slug: {
+    type: "string",
+    minLength: 2,
+    maxLength: 60,
+  },
+  description: {
+    required: true,
+    type: "string",
+    minLength: 10,
+    maxLength: 300,
+  },
+  icon: {
+    type: "string",
+    maxLength: 50,
+  },
+  tags: {
+    type: "array",
+    itemType: "string",
+  },
+};
+
 const createPostValidation = {
   title: {
     required: true,
@@ -81,6 +109,7 @@ const createMeetingValidation = {
 };
 
 module.exports = {
+  createForumValidation,
   createPostValidation,
   createCommentValidation,
   createMeetingValidation,

@@ -13,6 +13,18 @@ const getForums = asyncHandler(async (req, res) => {
   });
 });
 
+const createForum = asyncHandler(async (req, res) => {
+  const forum = await forumsService.createForum(req.user, req.body);
+
+  res.status(201).json({
+    success: true,
+    message: "Forum created successfully",
+    data: {
+      forum,
+    },
+  });
+});
+
 const getForum = asyncHandler(async (req, res) => {
   const forum = await forumsService.getForumById(req.params.forumId);
 
@@ -183,6 +195,7 @@ const joinRecommendedForums = asyncHandler(async (req, res) => {
 
 module.exports = {
   getForums,
+  createForum,
   getForum,
   getForumBySlug,
   createPost,

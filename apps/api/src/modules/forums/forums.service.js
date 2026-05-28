@@ -8,8 +8,48 @@ const ForumMeeting = require("../../../models/ForumMeeting");
 
 const ForumMembership = require("../../../models/ForumMembership");
 
+const createSlug = (name) => {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+};
+
+const normalizeTags = (tags = []) => {
+  return [...new Set(tags.map((tag) => tag.trim().toLowerCase()).filter(Boolean))];
+};
+
 const getAllForums = async () => {
   return Forum.find({ isActive: true }).sort({ name: 1 });
+};
+
+const createForum = async (creator, payload) => {
+  if (!["beanpist", "admin"].includes(creator.role)) {
+    throw new ApiError(403, "Only therapists can create forums");
+  }
+
+  const slug = createSlug(payload.slug || payload.name);
+
+  if (!slug) {
+    throw new ApiError(400, "Forum slug could not be created from the name");
+  }
+
+  const existingForum = await Forum.findOne({ slug });
+
+  if (existingForum) {
+    throw new ApiError(409, "A forum with this name or slug already exists");
+  }
+
+  return Forum.create({
+    name: payload.name,
+    slug,
+    description: payload.description,
+    icon: payload.icon || "",
+    tags: normalizeTags(payload.tags || []),
+    isFeatured: false,
+    createdBy: creator._id,
+  });
 };
 
 const getForumById = async (forumId) => {
@@ -357,6 +397,7 @@ const joinRecommendedForums = async (user) => {
 
 module.exports = {
   getAllForums,
+  createForum,
   getForumById,
   getForumBySlug,
   createForumPost,
