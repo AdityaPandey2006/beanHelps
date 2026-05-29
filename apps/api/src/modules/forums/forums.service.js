@@ -22,6 +22,22 @@ const ensureVerifiedTherapist = (user) => {
   }
 };
 
+const ensureCanParticipateInForum = async (forumId, user) => {
+  if (user.role === "admin" || user.role === "beanpist") {
+    return;
+  }
+
+  const membership = await ForumMembership.findOne({
+    forum: forumId,
+    user: user._id,
+    status: "active",
+  });
+
+  if (!membership) {
+    throw new ApiError(403, "Join this forum before posting or commenting");
+  }
+};
+
 const getAllForums = async () => {
   return Forum.find({ isActive: true }).sort({ name: 1 });
 };
@@ -54,6 +70,8 @@ const getForumBySlug = async (slug) => {
 
 const createForumPost = async (forumId, author, payload) => {
   const forum = await getForumById(forumId);
+
+  await ensureCanParticipateInForum(forum._id, author);
 
   if (["therapist_article", "resource"].includes(payload.type)) {
     ensureVerifiedTherapist(author);
@@ -94,6 +112,8 @@ const getForumPostById = async (postId) => {
 
 const createForumComment = async (postId, author, payload) => {
   const post = await getForumPostById(postId);
+
+  await ensureCanParticipateInForum(post.forum, author);
 
   if (post.isLocked) {
     throw new ApiError(403, "This post is locked");

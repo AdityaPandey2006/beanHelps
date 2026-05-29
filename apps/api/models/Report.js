@@ -40,6 +40,15 @@ const reportSchema = new mongoose.Schema(
       enum: ["open", "reviewing", "resolved", "dismissed"],
       default: "open",
     },
+    priority: {
+      type: String,
+      enum: ["normal", "high"],
+      default: "normal",
+    },
+    autoHiddenAt: {
+      type: Date,
+      default: null,
+    },
     reviewedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -62,8 +71,10 @@ const reportSchema = new mongoose.Schema(
 );
 
 reportSchema.index({ targetType: 1, targetId: 1 });
+reportSchema.index({ reporter: 1, targetType: 1, targetId: 1 }, { unique: true });
 reportSchema.index({ reporter: 1, createdAt: -1 });
 reportSchema.index({ status: 1, createdAt: -1 });
+reportSchema.index({ priority: 1, createdAt: -1 });
 
 const Report = mongoose.model("Report", reportSchema);
 

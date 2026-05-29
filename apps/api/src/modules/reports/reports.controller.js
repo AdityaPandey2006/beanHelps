@@ -14,16 +14,20 @@ const createReport = asyncHandler(async (req, res) => {
 });
 
 const getReports = asyncHandler(async (req, res) => {
-  const reports = await reportsService.getReports({
+  const filters = {
     status: req.query.status,
     targetType: req.query.targetType,
-  });
+  };
+
+  const reports = await reportsService.getReports(filters);
+  const summaries = await reportsService.getReportSummaries(filters);
 
   res.status(200).json({
     success: true,
     message: "Reports fetched successfully",
     data: {
       reports,
+      summaries,
     },
   });
 });
