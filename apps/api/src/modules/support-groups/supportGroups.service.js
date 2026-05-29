@@ -35,9 +35,9 @@ const updateGroupStatus = (group) => {
 
 const populateGroup = (query) => {
   return query
-    .populate("createdBy", "name role")
-    .populate("organizer", "name role")
-    .populate("therapist", "name role");
+    .populate("createdBy", "name displayName role")
+    .populate("organizer", "name displayName role")
+    .populate("therapist", "name displayName role");
 };
 
 const isSameObjectId = (firstId, secondId) => {
@@ -106,11 +106,24 @@ const ensureUserIsNotWaiting = async (userId) => {
   }
 };
 
+const cancelWaitingEntriesForUser = async (userId) => {
+  await SupportGroupWaitlist.updateMany(
+    {
+      user: userId,
+      status: "waiting",
+    },
+    {
+      $set: {
+        status: "cancelled",
+      },
+    }
+  );
+};
+
 const findBestOpenGroup = async ({ tags, language, preferredGroupType }) => {
   const query = {
     isActive: true,
     status: { $in: ["needs_members", "open"] },
-    currentMemberCount: { $lt: DEFAULT_CAPACITY + 1 },
     tags: { $in: normalizeTags(tags) },
   };
 
@@ -225,7 +238,7 @@ const tryCreateGroupFromWaitlist = async ({ tags, language, preferredGroupType }
   }
 
   const waitingEntries = await SupportGroupWaitlist.find(query)
-    .populate("user", "name role")
+    .populate("user", "name displayName role")
     .sort({ createdAt: 1 });
 
   const rankedEntries = waitingEntries
@@ -297,6 +310,7 @@ const matchSupportGroup = async (user, payload) => {
 
   if (bestGroup) {
     const group = await addUserToGroup(bestGroup, user);
+    await cancelWaitingEntriesForUser(user._id);
 
     return {
       status: "matched_existing_group",
@@ -392,7 +406,30 @@ const joinSupportGroup = async (user, groupId) => {
     throw new ApiError(404, "Support group not found or not open");
   }
 
-  return addUserToGroup(group, user);
+  const joinedGroup = await addUserToGroup(group, user);
+  await cancelWaitingEntriesForUser(user._id);
+
+  return joinedGroup;
+};
+
+const cancelSupportGroupWaitlist = async (user) => {
+  if (user.role !== "beaner") {
+    throw new ApiError(403, "Only beaners can cancel support group waitlist entries");
+  }
+
+  const waitlistEntry = await SupportGroupWaitlist.findOne({
+    user: user._id,
+    status: "waiting",
+  }).sort({ createdAt: -1 });
+
+  if (!waitlistEntry) {
+    throw new ApiError(404, "No active support group waitlist entry found");
+  }
+
+  waitlistEntry.status = "cancelled";
+  await waitlistEntry.save();
+
+  return waitlistEntry;
 };
 
 const findBestWaitlistedUserForGroup = async (group) => {
@@ -400,7 +437,7 @@ const findBestWaitlistedUserForGroup = async (group) => {
     status: "waiting",
     tags: { $in: normalizeTags(group.tags) },
   })
-    .populate("user", "name role")
+    .populate("user", "name displayName role")
     .sort({ createdAt: 1 });
 
   const rankedEntries = waitingEntries
@@ -514,7 +551,7 @@ const getSupportGroupMembers = async (groupId) => {
     supportGroup: groupId,
     status: "active",
   })
-    .populate("user", "name role")
+    .populate("user", "name displayName role")
     .sort({ role: -1, joinedAt: 1 });
 };
 
@@ -606,7 +643,7 @@ const createSupportGroupMeeting = async (user, groupId, payload) => {
 
   return SupportGroupMeeting.findById(meeting._id)
     .populate("supportGroup", "name tags")
-    .populate("organizer", "name role");
+    .populate("organizer", "name displayName role");
 };
 
 const getSupportGroupMeetings = async (user, groupId) => {
@@ -619,7 +656,7 @@ const getSupportGroupMeetings = async (user, groupId) => {
     status: "scheduled",
   })
     .populate("supportGroup", "name tags")
-    .populate("organizer", "name role")
+    .populate("organizer", "name displayName role")
     .sort({ startsAt: 1 });
 };
 
@@ -649,7 +686,7 @@ const createSupportGroupMessage = async (user, groupId, payload) => {
   });
 
   return SupportGroupMessage.findById(message._id)
-    .populate("sender", "name role")
+    .populate("sender", "name displayName role")
     .populate("supportGroup", "name tags");
 };
 
@@ -662,7 +699,7 @@ const getSupportGroupMessages = async (user, groupId) => {
     supportGroup: groupId,
     isDeleted: false,
   })
-    .populate("sender", "name role")
+    .populate("sender", "name displayName role")
     .sort({ createdAt: 1 });
 };
 
@@ -671,6 +708,7 @@ module.exports = {
   matchSupportGroup,//this is smart matching. the user just puts in tags and prefernces and gets added
   createSupportGroup,
   joinSupportGroup,//this is manual grp joining
+  cancelSupportGroupWaitlist,
   leaveSupportGroup,
   getSupportGroupById,
   getSupportGroupMembers,

@@ -15,6 +15,7 @@ const sanitizeUser = (user) => {
   const sanitizedUser = {
     id: user._id,
     name: user.name,
+    displayName: user.displayName || user.name,
     email: user.email,
     role: user.role,
     createdAt: user.createdAt,
@@ -48,7 +49,7 @@ const sanitizeUser = (user) => {
   return sanitizedUser;
 };
 
-const signupUser = async ({ name, email, password, role }) => {
+const signupUser = async ({ name, displayName, email, password, role }) => {
   const existingUser = await User.findOne({ email });
 
   if (existingUser) {
@@ -59,6 +60,7 @@ const signupUser = async ({ name, email, password, role }) => {
 
   const user = await User.create({
     name,
+    displayName: displayName?.trim() || name,
     email: email.toLowerCase(),
     password: hashedPassword,
     role,

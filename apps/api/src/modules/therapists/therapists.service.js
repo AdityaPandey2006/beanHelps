@@ -26,7 +26,7 @@ const getJoinedForumMeetings = async (therapistId) => {
       },
       populate: [
         { path: "forum", select: "name slug" },
-        { path: "host", select: "name role" },
+        { path: "host", select: "name displayName role" },
       ],
     })
     .sort({ registeredAt: -1 })
@@ -162,8 +162,8 @@ const getTherapistDashboard = async (userId) => {
       { createdBy: therapist._id },
     ],
   })
-    .populate("organizer", "name role")
-    .populate("therapist", "name role")
+    .populate("organizer", "name displayName role")
+    .populate("therapist", "name displayName role")
     .sort({ updatedAt: -1 });
 
   const assignedSupportGroupIds = assignedSupportGroups.map((group) => group._id);
@@ -194,7 +194,7 @@ const getTherapistDashboard = async (userId) => {
       ],
     })
       .populate("supportGroup", "name tags")
-      .populate("organizer", "name role")
+      .populate("organizer", "name displayName role")
       .sort({ startsAt: 1 })
       .limit(5),
 
@@ -212,7 +212,7 @@ const getTherapistDashboard = async (userId) => {
       isDeleted: false,
     })
       .populate("supportGroup", "name tags")
-      .populate("sender", "name role")
+      .populate("sender", "name displayName role")
       .sort({ createdAt: -1 })
       .limit(8),
 

@@ -86,6 +86,12 @@ const userSchema = new mongoose.Schema(
       minlength: 2,
       maxlength: 50,
     },
+    displayName: {
+      type: String,
+      trim: true,
+      minlength: 2,
+      maxlength: 40,
+    },
     email: {
       type: String,
       required: true,
@@ -120,6 +126,10 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.pre("save", function setTherapistProfile() {
+  if (!this.displayName) {
+    this.displayName = this.name;
+  }
+
   if (this.role === "beanpist" && !this.therapistProfile) {
     this.therapistProfile = {
       verificationStatus: "pending",

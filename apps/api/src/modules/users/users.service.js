@@ -35,6 +35,19 @@ const updateOnboarding = async (userId, payload) => {
   return sanitizeUser(user);
 };
 
+const updateProfile = async (userId, payload) => {
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  user.displayName = payload.displayName.trim();
+  await user.save();
+
+  return sanitizeUser(user);
+};
+
 const getJoinedForums = async (userId) => {
   const memberships = await ForumMembership.find({
     user: userId,
@@ -77,9 +90,9 @@ const getActiveSupportGroupForBeaner = async (userId) => {
     .populate({
       path: "supportGroup",
       populate: [
-        { path: "createdBy", select: "name role" },
-        { path: "organizer", select: "name role" },
-        { path: "therapist", select: "name role" },
+        { path: "createdBy", select: "name displayName role" },
+        { path: "organizer", select: "name displayName role" },
+        { path: "therapist", select: "name displayName role" },
       ],
     })
     .sort({ joinedAt: -1 });
@@ -115,7 +128,7 @@ const getUpcomingSupportGroupMeetings = async (supportGroupId) => {
     startsAt: { $gte: new Date() },
   })
     .populate("supportGroup", "name tags")
-    .populate("organizer", "name role")
+    .populate("organizer", "name displayName role")
     .sort({ startsAt: 1 })
     .limit(5);
 };
@@ -133,7 +146,7 @@ const getUpcomingForumMeetingsForBeaner = async (userId) => {
       },
       populate: [
         { path: "forum", select: "name slug" },
-        { path: "host", select: "name role" },
+        { path: "host", select: "name displayName role" },
       ],
     })
     .sort({ registeredAt: -1 })
@@ -181,6 +194,7 @@ const getBeanerHome = async (userId) => {
 };
 
 module.exports = {
+  updateProfile,
   updateOnboarding,
   getBeanerHome,
 };

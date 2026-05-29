@@ -37,6 +37,16 @@ const onboardingValidation = {
   },
 };
 
+const profileValidation = {
+  displayName: {
+    required: true,
+    type: "string",
+    minLength: 2,
+    maxLength: 40,
+  },
+};
+
 module.exports = {
   onboardingValidation,
+  profileValidation,
 };

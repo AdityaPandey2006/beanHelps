@@ -87,7 +87,7 @@ const createForumPost = async (forumId, author, payload) => {
   });
 
   return ForumPost.findById(post._id)
-    .populate("author", "name role")
+    .populate("author", "name displayName role")
     .populate("forum", "name slug");
 };
 
@@ -95,7 +95,7 @@ const getForumPosts = async (forumId) => {
   await getForumById(forumId);
 
   return ForumPost.find({ forum: forumId, isDeleted: false })
-    .populate("author", "name role")
+    .populate("author", "name displayName role")
     .populate("forum", "name slug")
     .sort({ isPinned: -1, createdAt: -1 });
 };
@@ -140,7 +140,7 @@ const createForumComment = async (postId, author, payload) => {
   });
 
   return ForumComment.findById(comment._id)
-    .populate("author", "name role")
+    .populate("author", "name displayName role")
     .populate("post", "title")
     .populate("forum", "name slug");
 };
@@ -152,7 +152,7 @@ const getForumPostComments = async (postId) => {
     post: postId,
     isDeleted: false,
   })
-    .populate("author", "name role")
+    .populate("author", "name displayName role")
     .sort({ createdAt: 1 });
 };
 
@@ -196,7 +196,7 @@ const createForumMeeting = async (forumId, host, payload) => {
   });
 
   return ForumMeeting.findById(meeting._id)
-    .populate("host", "name role")
+    .populate("host", "name displayName role")
     .populate("forum", "name slug");
 };
 
@@ -207,7 +207,7 @@ const getForumMeetings = async (forumId) => {
     forum: forumId,
     status: "scheduled",
   })
-    .populate("host", "name role")
+    .populate("host", "name displayName role")
     .populate("forum", "name slug")
     .sort({ startsAt: 1 });
 };
@@ -271,10 +271,10 @@ const joinForumMeeting = async (meetingId, user) => {
         path: "meeting",
         populate: [
           { path: "forum", select: "name slug" },
-          { path: "host", select: "name role" },
+          { path: "host", select: "name displayName role" },
         ],
       },
-      { path: "user", select: "name role" },
+      { path: "user", select: "name displayName role" },
     ]);
   }
 
@@ -288,10 +288,10 @@ const joinForumMeeting = async (meetingId, user) => {
       path: "meeting",
       populate: [
         { path: "forum", select: "name slug" },
-        { path: "host", select: "name role" },
+        { path: "host", select: "name displayName role" },
       ],
     },
-    { path: "user", select: "name role" },
+    { path: "user", select: "name displayName role" },
   ]);
 };
 
@@ -315,10 +315,10 @@ const leaveForumMeeting = async (meetingId, user) => {
       path: "meeting",
       populate: [
         { path: "forum", select: "name slug" },
-        { path: "host", select: "name role" },
+        { path: "host", select: "name displayName role" },
       ],
     },
-    { path: "user", select: "name role" },
+    { path: "user", select: "name displayName role" },
   ]);
 };
 
@@ -335,7 +335,7 @@ const getMyForumMeetingRegistrations = async (user) => {
       },
       populate: [
         { path: "forum", select: "name slug" },
-        { path: "host", select: "name role" },
+        { path: "host", select: "name displayName role" },
       ],
     })
     .sort({ registeredAt: -1 })

@@ -53,6 +53,18 @@ const joinSupportGroup = asyncHandler(async (req, res) => {
   });
 });
 
+const cancelSupportGroupWaitlist = asyncHandler(async (req, res) => {
+  const waitlistEntry = await supportGroupsService.cancelSupportGroupWaitlist(req.user);
+
+  res.status(200).json({
+    success: true,
+    message: "Support group waitlist entry cancelled successfully",
+    data: {
+      waitlistEntry,
+    },
+  });
+});
+
 const leaveSupportGroup = asyncHandler(async (req, res) => {
   const result = await supportGroupsService.leaveSupportGroup(req.user, req.params.groupId);
 
@@ -154,6 +166,7 @@ module.exports = {
   matchSupportGroup,
   createSupportGroup,
   joinSupportGroup,
+  cancelSupportGroupWaitlist,
   leaveSupportGroup,
   getSupportGroup,
   getSupportGroupMembers,

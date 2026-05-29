@@ -3,8 +3,8 @@ const express = require("express");
 const auth = require("../../middleware/auth");
 const authorizeRoles = require("../../middleware/authorizeRoles");
 const validateRequest = require("../../middleware/validateRequest");
-const { onboardingValidation } = require("./users.validation");
-const { updateOnboarding, getBeanerHome } = require("./users.controller");
+const { onboardingValidation, profileValidation } = require("./users.validation");
+const { updateProfile, updateOnboarding, getBeanerHome } = require("./users.controller");
 
 const router = express.Router();
 
@@ -13,6 +13,13 @@ router.get(
   auth,
   authorizeRoles("beaner"),
   getBeanerHome
+);
+
+router.patch(
+  "/me",
+  auth,
+  validateRequest(profileValidation),
+  updateProfile
 );
 
 router.patch(

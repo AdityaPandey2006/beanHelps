@@ -78,7 +78,7 @@ const createReport = async (reporter, payload) => {
 
   await refreshTargetReportPriority(payload.targetType, payload.targetId);
 
-  return Report.findById(report._id).populate("reporter", "name role email");
+  return Report.findById(report._id).populate("reporter", "name displayName role email");
 };
 
 const getReasonBreakdown = (reports) => {
@@ -142,8 +142,8 @@ const getReports = async (filters = {}) => {
   }
 
   return Report.find(query)
-    .populate("reporter", "name role email")
-    .populate("reviewedBy", "name role email")
+    .populate("reporter", "name displayName role email")
+    .populate("reviewedBy", "name displayName role email")
     .sort({ createdAt: -1 });
 };
 
@@ -254,8 +254,8 @@ const updateReportStatus = async (reportId, reviewer, payload) => {
   await report.save();
 
   return Report.findById(report._id)
-    .populate("reporter", "name role email")
-    .populate("reviewedBy", "name role email");
+    .populate("reporter", "name displayName role email")
+    .populate("reviewedBy", "name displayName role email");
 };
 
 const getReportById = async (reportId) => {
@@ -340,8 +340,8 @@ const applyReportAction = async (reportId, reviewer, payload) => {
   }
 
   return Report.findById(report._id)
-    .populate("reporter", "name role email")
-    .populate("reviewedBy", "name role email");
+    .populate("reporter", "name displayName role email")
+    .populate("reviewedBy", "name displayName role email");
 };
 
 module.exports = {

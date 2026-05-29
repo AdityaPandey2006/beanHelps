@@ -4,7 +4,7 @@
     "track": "Open Innovation",
     "type": "Mental health peer-support and community platform",
     "oneLinePitch": "beanHelps is a structured peer-support platform where people facing anxiety, stress, loneliness, grief, burnout, and related struggles can find safer communities, join small support circles, and access optional therapist-assisted guidance.",
-    "currentDateContext": "Updated during backend/frontend MVP work. This file is intended as context for teammates and their Codex sessions.",
+    "currentDateContext": "Updated on May 30, 2026 after frontend rebuild, reporting flow, privacy aliases, daily quotes, deployment setup, and support-group waitlist hardening.",
     "corePrinciple": "beanHelps is a peer-support and community platform. It is not an emergency response service or replacement for professional diagnosis or crisis care."
   },
   "problem": {
@@ -24,14 +24,19 @@
       "canDo": [
         "Sign up and log in",
         "Complete support onboarding",
+        "Set and update a privacy-facing display name/alias",
         "View and join forums",
         "Explore recommended forums",
         "Create forum posts and comments",
+        "Reply to comments in nested discussion threads",
         "View forum meetings",
         "Join or get matched into support groups",
+        "See persistent waitlist status and cancel a waitlist request",
+        "Leave their current support circle",
         "Use support group chat if they are an active group member",
         "View and attend support group meetings if they are an active group member",
-        "Report unsafe content"
+        "Report unsafe content",
+        "View a daily kindness quote"
       ]
     },
     "beanpist": {
@@ -44,7 +49,7 @@
         "Create forum-wide meetings/webinars",
         "Create therapist-led support groups",
         "Access support group meetings/chat when assigned as group therapist",
-        "View therapist dashboard once teammate completes that module"
+        "View therapist dashboard with assigned circles, upcoming sessions, recent messages, and basic weekly-insight placeholders"
       ],
       "verification": "Therapist verification lives inside therapistProfile.verificationStatus. Admins can list pending therapists and update verification status through implemented backend routes. For the MVP, pending therapists may complete/update their profile, verified therapists can use therapist powers, and rejected therapists can log in but cannot resubmit or use therapist-only actions."
     },
@@ -52,7 +57,7 @@
       "meaning": "Platform administrator.",
       "canDo": [
         "Moderate reports",
-        "View all reports",
+        "View grouped report summaries with report counts, reason breakdowns, high-priority flags, and auto-hidden flags",
         "Apply report actions",
         "List pending therapist profiles",
         "Verify, reject, or return therapist verification status to pending"
@@ -93,7 +98,8 @@
         "If a match exists, user joins best group.",
         "If no group has space, user enters waitlist.",
         "If enough similar waitlisted users exist, a new group is created.",
-        "When someone leaves a group, backend tries to fill the spot from the best waitlisted user."
+        "When someone leaves a group, backend tries to fill the spot from the best waitlisted user.",
+        "If a waitlisted user manually joins or gets directly matched into a group, stale waiting entries are cancelled."
       ],
       "mvpRule": "Create a new group from waitlist when 6 similar users are available."
     },
@@ -116,6 +122,25 @@
         "Use assigned-therapist access for support group meetings/chat"
       ],
       "frontendBehavior": "Rejected beanpists are routed to the therapist home status screen instead of therapist onboarding."
+    },
+    "privacyAliases": {
+      "decision": "Users have both an account name and a displayName. Community surfaces prefer displayName so beaners can participate without exposing their real/account name.",
+      "whereUsed": [
+        "Navbar identity",
+        "Beaner home greeting",
+        "Forum post authors",
+        "Forum comment/reply authors",
+        "Support group member lists",
+        "Support group chat messages",
+        "Report reporter labels"
+      ],
+      "safetyNote": "Membership, reporting, waitlists, and auth use immutable user ids, so changing displayName does not allow duplicate group joins or repeated reports."
+    },
+    "dailyKindnessQuotes": {
+      "decision": "Backend exposes a cached daily quote endpoint that uses ZenQuotes when available and beanHelps fallback quotes when unavailable.",
+      "endpoint": "GET /api/quotes/daily",
+      "frontendPlacement": "Beaner home page Daily kindness card.",
+      "attribution": "When ZenQuotes is used, frontend displays attribution text and link returned by the backend."
     }
   },
   "backendArchitecture": {
@@ -152,13 +177,14 @@
       "purpose": "One auth model for beaners, beanpists, and admins.",
       "importantFields": [
         "name",
+        "displayName",
         "email",
         "password",
         "role",
         "onboardingProfile",
         "therapistProfile"
       ],
-      "note": "Verification is therapist-only and belongs in therapistProfile.verificationStatus."
+      "note": "displayName is the privacy-facing alias. Verification is therapist-only and belongs in therapistProfile.verificationStatus."
     },
     "Forum": {
       "purpose": "Curated discussion/meeting space.",
@@ -287,7 +313,7 @@
         "matchedSupportGroup",
         "matchedAt"
       ],
-      "note": "Matched entries are kept for history/debugging instead of being deleted."
+      "note": "Matched and cancelled entries are kept for history/debugging instead of being deleted. Manual joins and direct auto-matches cancel stale waiting entries."
     },
     "SupportGroupMeeting": {
       "purpose": "Meetings scheduled by support group organizer/therapist/admin.",
@@ -326,6 +352,8 @@
         "reason",
         "details",
         "status",
+        "priority",
+        "autoHiddenAt",
         "reviewedBy",
         "reviewedAt",
         "resolutionNote"
@@ -341,7 +369,10 @@
         "dismiss": "Report reviewed and no action needed.",
         "resolve": "Report handled without hiding the content.",
         "hide_content": "Reported content hidden or support group closed."
-      }
+      },
+      "dedupeRule": "One reporter can report a given target only once. Multiple different reporters can report the same target.",
+      "priorityRule": "Targets become high priority when report volume crosses the configured threshold or self-harm is reported.",
+      "autoHideRule": "Repeated serious reports can auto-hide content before admin review."
     }
   },
   "implementedEndpoints": {
@@ -354,12 +385,15 @@
       "GET /api/auth/me"
     ],
     "users": [
+      "GET /api/users/home",
+      "PATCH /api/users/me",
       "PATCH /api/users/onboarding"
     ],
     "therapists": [
       "PATCH /api/therapists/profile",
       "GET /api/therapists/pending",
-      "PATCH /api/therapists/:therapistId/verification"
+      "PATCH /api/therapists/:therapistId/verification",
+      "GET /api/therapists/dashboard"
     ],
     "forums": [
       "GET /api/forums",
@@ -382,6 +416,7 @@
       "GET /api/support-groups",
       "POST /api/support-groups",
       "POST /api/support-groups/match",
+      "POST /api/support-groups/waitlist/cancel",
       "POST /api/support-groups/:groupId/join",
       "POST /api/support-groups/:groupId/leave",
       "GET /api/support-groups/:groupId",
@@ -396,6 +431,9 @@
       "GET /api/reports",
       "PATCH /api/reports/:reportId/status",
       "PATCH /api/reports/:reportId/action"
+    ],
+    "quotes": [
+      "GET /api/quotes/daily"
     ]
   },
   "frontendState": {
@@ -403,36 +441,46 @@
       "Vite",
       "React",
       "React Router",
-      "lucide-react installed/planned"
+      "lucide-react"
     ],
     "implementedOrStarted": [
-      "Auth layout",
+      "Auth layout with beach background visual treatment",
       "Login page",
-      "Signup page",
+      "Signup page with account name, display name, role selection, and redirect behavior",
       "API client",
       "Role/onboarding redirect helper",
-      "Placeholder beaner onboarding page",
+      "Beaner onboarding page wired to backend",
       "Therapist onboarding route guards rejected or already-completed profiles",
-      "Placeholder beaner home",
-      "Therapist home shows pending/rejected verification states"
+      "Beaner home with joined forums, recommended forums auto-join, support circle/waitlist status, privacy alias editing, upcoming sessions, and daily kindness quote",
+      "Explore Forums with joined/explore states and join buttons",
+      "Forum detail with discussion and meetings layers",
+      "Forum posts with nested comment replies",
+      "Explore Support Groups with filters, auto-match, active-circle state, persistent waitlist state, leave current circle, and cancel waitlist",
+      "Support group detail with members, chat, prompts, resources, events, and reports",
+      "Report buttons and modal on posts, comments, support group messages, and support groups",
+      "Therapist home shows pending/rejected/verified verification states, assigned groups, upcoming sessions, recent messages, and insight metrics",
+      "Admin home, therapist verification page, and grouped reports page"
     ],
     "routingDecision": {
       "afterLoginOrSignup": "Frontend calls GET /api/auth/me then routes using getNextRoute(user).",
-      "beanerNotOnboarded": "/onboarding/beaner",
+      "beanerNotOnboarded": "/onboarding/user",
       "beanerOnboarded": "/home",
       "beanpistNotOnboarded": "/onboarding/therapist",
       "beanpistOnboarded": "/therapist/home",
       "beanpistRejected": "/therapist/home"
     },
-    "designDirection": "The frontend is moving toward the parchment/heritage visual identity from the team PDF with the beanHelps logo asset in apps/web/src/assets/beanhelps-logo.png."
+    "designDirection": "The frontend currently uses a calm beach background, soft rounded cards, muted sage/teal accents, and accessible rounded typography. Earlier pixel theme experiments were replaced by a softer wellness theme."
   },
   "safetyAndModeration": {
     "positioning": "beanHelps should include safety disclaimers and should not be framed as crisis response.",
     "currentModerationFlow": [
       "Any logged-in user can submit a report.",
-      "Admin can list/filter reports.",
+      "A single user cannot repeatedly report the same target.",
+      "Multiple different users can report the same target.",
+      "Admin can view grouped target summaries with report counts and reason breakdown.",
       "Admin can update status.",
-      "Admin can apply actions such as hide_content."
+      "Admin can apply actions such as hide_content.",
+      "Repeated serious reports can mark targets high priority and auto-hide content."
     ],
     "contentHidingBehavior": {
       "forum_post": "Set isDeleted = true.",
@@ -442,15 +490,16 @@
     },
     "futureSafetyIdeas": [
       "AI self-harm/harmful-message detection",
+      "Weekly AI summaries for therapist dashboards",
       "Crisis-resource escalation copy",
-      "Moderator review dashboard",
       "Rate limits",
-      "Better admin role provisioning"
+      "Better admin role provisioning",
+      "Demo seed script for admins, therapists, beaners, forums, groups, messages, meetings, and reports"
     ]
   },
   "ownershipSuggestionsForTeam": {
     "therapistDashboardTeammate": {
-      "recommendedEndpoint": "GET /api/therapists/dashboard",
+      "implementedEndpoint": "GET /api/therapists/dashboard",
       "suggestedReturnShape": [
         "therapistProfile",
         "featuredForums",
@@ -461,17 +510,16 @@
       "meaningOfAssignedSupportGroups": "Support groups where SupportGroup.therapist equals the therapist user's id."
     },
     "otherUsefulParallelTasks": [
-      "Beaner home aggregate endpoint",
-      "Frontend onboarding forms wired to existing APIs",
-      "Frontend forum membership home/explore screens",
+      "Weekly AI summary generation and persistence",
+      "Seed/demo data",
       "README API documentation",
-      "Seed/demo data"
+      "Deployment smoke testing"
     ]
   },
   "nextBackendSteps": [
-    "Add beaner home aggregate endpoint if frontend needs a single dashboard payload.",
-    "Finish testing report actions and ensure hidden forum posts are filtered from forum post lists.",
-    "Verify support group chat routes with beaner member, assigned therapist, and admin tokens.",
-    "Add API docs with request bodies for teammates."
+    "Create an idempotent demo seed script for admin credentials, sample beaners, pending/verified/rejected therapists, forums, memberships, support groups, messages, meetings, waitlist entries, and reports.",
+    "Implement weekly AI summaries for therapist dashboards using recent support group messages, with a safe fallback when no AI key is configured.",
+    "Add API docs with request bodies for teammates.",
+    "Add production rate limits and stronger admin provisioning before any real-world use."
   ]
 }

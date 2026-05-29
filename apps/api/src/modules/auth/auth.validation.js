@@ -9,6 +9,12 @@ const signupValidation = {
     minLength: 2,
     maxLength: 50,
   },
+  displayName: {
+    required: true,
+    type: "string",
+    minLength: 2,
+    maxLength: 40,
+  },
   email: {
     required: true,
     type: "string",

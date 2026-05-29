@@ -7,6 +7,7 @@ const therapistsRoutes = require("../modules/therapists/therapists.routes");
 const forumsRoutes = require("../modules/forums/forums.routes");
 const supportGroupsRoutes = require("../modules/support-groups/supportGroups.routes");
 const reportsRoutes = require("../modules/reports/reports.routes");
+const quotesRoutes = require("../modules/quotes/quotes.routes");
 
 const router = express.Router();
 
@@ -17,5 +18,6 @@ router.use("/therapists", therapistsRoutes);
 router.use("/forums", forumsRoutes);
 router.use("/support-groups",supportGroupsRoutes);
 router.use("/reports", reportsRoutes);
+router.use("/quotes", quotesRoutes);
 
 module.exports = router;

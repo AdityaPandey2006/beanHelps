@@ -7,6 +7,7 @@ const {
   matchSupportGroup,
   createSupportGroup,
   joinSupportGroup,
+  cancelSupportGroupWaitlist,
   leaveSupportGroup,
   getSupportGroup,
   getSupportGroupMembers,
@@ -27,6 +28,7 @@ const router = express.Router();
 router.get("/", getSupportGroups);
 router.post("/", auth, validateRequest(createSupportGroupValidation), createSupportGroup);
 router.post("/match", auth, validateRequest(matchSupportGroupValidation), matchSupportGroup);
+router.post("/waitlist/cancel", auth, cancelSupportGroupWaitlist);
 router.post("/:groupId/join", auth, joinSupportGroup);
 router.post("/:groupId/leave", auth, leaveSupportGroup);
 
