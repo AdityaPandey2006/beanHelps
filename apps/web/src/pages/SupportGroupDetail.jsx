@@ -7,7 +7,7 @@ import EmptyState from "../components/EmptyState.jsx";
 import ReportButton from "../components/ReportButton.jsx";
 import StatusBadge from "../components/StatusBadge.jsx";
 import Tag from "../components/Tag.jsx";
-import { asArray, formatDateTime } from "../utils/format.js";
+import { asArray, formatDateTime, publicName } from "../utils/format.js";
 
 const prompts = [
   "What felt heavier than usual this week?",
@@ -90,7 +90,7 @@ export default function SupportGroupDetail() {
             <div className="mt-3 space-y-2">
               {members.map((member) => (
                 <div key={member._id} className="rounded-md bg-bean-mist/70 p-3 text-sm">
-                  <p className="font-bold">{member.user?.name || member.name}</p>
+                  <p className="font-bold">{publicName(member.user, member.name || "Member")}</p>
                   <p className="text-bean-muted">{member.role}</p>
                 </div>
               ))}
@@ -112,7 +112,7 @@ export default function SupportGroupDetail() {
                 {messages.length ? messages.map((item) => (
                   <div key={item._id} className="rounded-lg bg-bean-mist/70 p-3">
                     <div className="flex items-start justify-between gap-3">
-                      <p className="text-xs font-bold text-bean-teal">{item.sender?.name || "Member"}</p>
+                      <p className="text-xs font-bold text-bean-teal">{publicName(item.sender)}</p>
                       <ReportButton targetType="support_group_message" targetId={item._id} label="Report message" />
                     </div>
                     <p className="mt-1 text-sm text-bean-ink">{item.content}</p>

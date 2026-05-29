@@ -22,6 +22,12 @@ export function initials(name = "beanHelps") {
     .join("");
 }
 
+export function publicName(user, fallback = "Member") {
+  if (!user) return fallback;
+  if (user.role === "beaner") return user.displayName || fallback;
+  return user.displayName || user.name || fallback;
+}
+
 export function asArray(value) {
   return Array.isArray(value) ? value : [];
 }

@@ -47,3 +47,8 @@ export const authApi = {
     api("/auth/signup", { method: "POST", body: JSON.stringify(body) }),
   me: () => api("/auth/me"),
 };
+
+export const usersApi = {
+  updateProfile: (body) =>
+    api("/users/me", { method: "PATCH", body: JSON.stringify(body) }),
+};

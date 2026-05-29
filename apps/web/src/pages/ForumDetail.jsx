@@ -8,7 +8,7 @@ import EmptyState from "../components/EmptyState.jsx";
 import ReportButton from "../components/ReportButton.jsx";
 import StatusBadge from "../components/StatusBadge.jsx";
 import Tag from "../components/Tag.jsx";
-import { asArray, formatDateTime } from "../utils/format.js";
+import { asArray, formatDateTime, publicName } from "../utils/format.js";
 
 export default function ForumDetail() {
   const { forumKey } = useParams();
@@ -209,7 +209,7 @@ function PostCard({ post }) {
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge>{post.type?.replace("_", " ") || "thread"}</StatusBadge>
-          <span className="text-xs font-semibold text-bean-muted">by {post.author?.name || "community member"}</span>
+          <span className="text-xs font-semibold text-bean-muted">by {publicName(post.author, "community member")}</span>
         </div>
         <ReportButton targetType="forum_post" targetId={post._id} label="Report post" />
       </div>

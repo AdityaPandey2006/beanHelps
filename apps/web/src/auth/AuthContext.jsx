@@ -6,7 +6,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { authApi, getToken, setToken } from "../api/client.js";
+import { authApi, getToken, setToken, usersApi } from "../api/client.js";
 
 const AuthContext = createContext(null);
 
@@ -53,14 +53,20 @@ export function AuthProvider({ children }) {
     return data.user;
   }, []);
 
+  const updateProfile = useCallback(async (payload) => {
+    const data = await usersApi.updateProfile(payload);
+    setUser(data.user);
+    return data.user;
+  }, []);
+
   const logout = useCallback(() => {
     setToken(null);
     setUser(null);
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, login, signup, logout, refreshUser, setUser }),
-    [user, loading, login, signup, logout, refreshUser]
+    () => ({ user, loading, login, signup, logout, refreshUser, setUser, updateProfile }),
+    [user, loading, login, signup, logout, refreshUser, updateProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

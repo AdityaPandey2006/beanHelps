@@ -5,7 +5,7 @@ import { api } from "../api/client.js";
 import Button from "../components/Button.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import ReportButton from "../components/ReportButton.jsx";
-import { formatDate } from "../utils/format.js";
+import { formatDate, publicName } from "../utils/format.js";
 
 export default function PostDetail() {
   const { postId } = useParams();
@@ -105,7 +105,7 @@ function CommentNode({
       <article className="rounded-lg bg-white/90 p-4 shadow-sm">
         <div className="flex items-start justify-between gap-3">
           <p className="text-sm text-bean-muted">
-            {comment.author?.name || "Member"} · {formatDate(comment.createdAt)}
+            {publicName(comment.author)} · {formatDate(comment.createdAt)}
           </p>
           <ReportButton targetType="forum_comment" targetId={comment._id} label="Report comment" />
         </div>
@@ -130,7 +130,7 @@ function CommentNode({
               className="field"
               value={replyContent}
               onChange={(event) => setReplyContent(event.target.value)}
-              placeholder={`Reply to ${comment.author?.name || "this comment"}`}
+              placeholder={`Reply to ${publicName(comment.author, "this comment")}`}
               required
             />
             <Button type="submit">

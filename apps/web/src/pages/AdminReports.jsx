@@ -3,7 +3,7 @@ import { api } from "../api/client.js";
 import Button from "../components/Button.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import StatusBadge from "../components/StatusBadge.jsx";
-import { formatDate } from "../utils/format.js";
+import { formatDate, publicName } from "../utils/format.js";
 
 export default function AdminReports() {
   const [summaries, setSummaries] = useState([]);
@@ -62,7 +62,7 @@ export default function AdminReports() {
                     {(summary.reports || []).map((report) => (
                       <div key={report.id} className="rounded-md bg-bean-mist/70 p-3 text-sm">
                         <p className="font-bold">
-                          {report.reason.replaceAll("_", " ")} · {report.reporter?.name || "Member"}
+                          {report.reason.replaceAll("_", " ")} · {publicName(report.reporter)}
                         </p>
                         <p className="mt-1 text-bean-muted">{report.details || "No details provided."}</p>
                       </div>

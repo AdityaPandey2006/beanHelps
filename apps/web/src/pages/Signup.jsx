@@ -10,6 +10,7 @@ export default function Signup() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
     name: "",
+    displayName: "",
     email: "",
     password: "",
     role: "beaner",
@@ -42,7 +43,7 @@ export default function Signup() {
 
       <form onSubmit={submit} className="mt-6 space-y-4">
         <label className="block">
-          <span className="text-sm font-semibold">Name</span>
+          <span className="text-sm font-semibold">Account name</span>
           <input
             name="name"
             value={form.name}
@@ -50,6 +51,21 @@ export default function Signup() {
             className="mt-2 w-full rounded-md border border-bean-sage/40 bg-white px-3 py-3 outline-none focus:border-bean-teal focus:ring-2 focus:ring-bean-teal/20"
             required
           />
+        </label>
+        <label className="block">
+          <span className="text-sm font-semibold">Display name</span>
+          <input
+            name="displayName"
+            value={form.displayName}
+            onChange={update}
+            className="mt-2 w-full rounded-md border border-bean-sage/40 bg-white px-3 py-3 outline-none focus:border-bean-teal focus:ring-2 focus:ring-bean-teal/20"
+            placeholder="What others will see"
+            maxLength={40}
+            required
+          />
+          <span className="mt-1 block text-xs text-bean-muted">
+            This alias is shown in forums and support circles.
+          </span>
         </label>
         <label className="block">
           <span className="text-sm font-semibold">Email</span>

@@ -2,21 +2,32 @@ import { CalendarDays, MessageCircle, Sparkles, UsersRound } from "lucide-react"
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client.js";
+import { useAuth } from "../auth/AuthContext.jsx";
 import Button from "../components/Button.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import Tag from "../components/Tag.jsx";
-import { asArray, formatDateTime } from "../utils/format.js";
+import { asArray, formatDateTime, publicName } from "../utils/format.js";
 
 export default function Home() {
+  const { updateProfile, setUser } = useAuth();
   const [home, setHome] = useState(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [aliasNotice, setAliasNotice] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [dailyQuote, setDailyQuote] = useState(null);
   const [joiningRecommended, setJoiningRecommended] = useState(false);
+  const [savingAlias, setSavingAlias] = useState(false);
 
   const loadHome = () => {
     let active = true;
     api("/users/home")
-      .then((data) => active && setHome(data))
+      .then((data) => {
+        if (active) {
+          setHome(data);
+          setDisplayName(data.user?.displayName || data.user?.name || "");
+        }
+      })
       .catch((err) => active && setError(err.message));
     return () => {
       active = false;
@@ -25,6 +36,16 @@ export default function Home() {
 
   useEffect(() => {
     return loadHome();
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    api("/quotes/daily")
+      .then((data) => active && setDailyQuote(data.quote))
+      .catch(() => active && setDailyQuote(null));
+    return () => {
+      active = false;
+    };
   }, []);
 
   if (error) return <ErrorPanel message={error} />;
@@ -57,15 +78,85 @@ export default function Home() {
     }
   };
 
+  const saveDisplayName = async (event) => {
+    event.preventDefault();
+    setAliasNotice("");
+    setSavingAlias(true);
+    try {
+      const updatedUser = await updateProfile({ displayName });
+      setUser(updatedUser);
+      setHome((current) => current ? { ...current, user: updatedUser } : current);
+      setAliasNotice("Display name updated.");
+    } catch (err) {
+      setAliasNotice(err.message);
+    } finally {
+      setSavingAlias(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <section className="rounded-lg bg-white/85 p-6 shadow-soft">
         <p className="text-sm font-bold uppercase tracking-wider text-bean-teal">Beaner home</p>
-        <h1 className="mt-2 text-3xl font-black">Hi {home.user?.name}, your calmer space is ready.</h1>
+        <h1 className="mt-2 text-3xl font-black">Hi {publicName(home.user)}, your calmer space is ready.</h1>
         <p className="mt-2 max-w-3xl text-bean-muted">
           Continue conversations, join forum meetings, or get matched into a small support circle.
         </p>
       </section>
+
+      <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
+        <section className="rounded-lg bg-white/85 p-5 shadow-soft">
+          <h2 className="text-xl font-black">Privacy alias</h2>
+          <p className="mt-1 text-sm text-bean-muted">
+            This is the name other members see in forums and support circles.
+          </p>
+          <form onSubmit={saveDisplayName} className="mt-4 flex flex-col gap-3 sm:flex-row">
+            <input
+              className="field"
+              value={displayName}
+              onChange={(event) => setDisplayName(event.target.value)}
+              minLength={2}
+              maxLength={40}
+              required
+            />
+            <Button type="submit" disabled={savingAlias}>
+              {savingAlias ? "Saving..." : "Save alias"}
+            </Button>
+          </form>
+          {aliasNotice && <p className="mt-3 rounded-md bg-bean-mist px-3 py-2 text-sm font-semibold text-bean-teal">{aliasNotice}</p>}
+        </section>
+
+        <section className="rounded-lg bg-white/85 p-5 shadow-soft">
+          <div className="flex items-center gap-3">
+            <Sparkles className="h-5 w-5 text-bean-teal" />
+            <h2 className="text-xl font-black">Daily kindness</h2>
+          </div>
+          {dailyQuote ? (
+            <div className="mt-4">
+              <blockquote className="text-lg font-semibold leading-7 text-bean-ink">
+                "{dailyQuote.quote}"
+              </blockquote>
+              <p className="mt-3 text-sm font-bold text-bean-teal">
+                {dailyQuote.author}
+              </p>
+              {dailyQuote.attributionUrl && (
+                <a
+                  href={dailyQuote.attributionUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-2 inline-flex text-xs font-semibold text-bean-muted hover:text-bean-teal"
+                >
+                  {dailyQuote.attributionText}
+                </a>
+              )}
+            </div>
+          ) : (
+            <p className="mt-4 text-sm text-bean-muted">
+              A daily quote will appear here when the quote service is available.
+            </p>
+          )}
+        </section>
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
         <section className="rounded-lg bg-white/85 p-5 shadow-soft">

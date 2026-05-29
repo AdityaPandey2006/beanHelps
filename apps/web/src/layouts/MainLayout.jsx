@@ -11,7 +11,7 @@ import {
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext.jsx";
 import { getRoleHome } from "../utils/routes.js";
-import { initials } from "../utils/format.js";
+import { initials, publicName } from "../utils/format.js";
 
 const linkBase =
   "inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold transition";
@@ -45,6 +45,7 @@ export default function MainLayout() {
   const navigate = useNavigate();
   const home = getRoleHome(user);
   const links = navFor(user?.role);
+  const visibleName = publicName(user, user?.name || "Member");
 
   const handleLogout = () => {
     logout();
@@ -87,11 +88,11 @@ export default function MainLayout() {
 
           <div className="flex items-center gap-3">
             <div className="hidden text-right sm:block">
-              <p className="text-sm font-bold">{user?.name}</p>
+              <p className="text-sm font-bold">{visibleName}</p>
               <p className="text-xs capitalize text-bean-muted">{user?.role}</p>
             </div>
             <div className="grid h-10 w-10 place-items-center rounded-full bg-white text-sm font-black text-bean-teal shadow-sm">
-              {initials(user?.name)}
+              {initials(visibleName)}
             </div>
             <button
               onClick={handleLogout}
