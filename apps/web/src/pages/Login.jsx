@@ -1,6 +1,6 @@
 import { LogIn } from "lucide-react";
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext.jsx";
 import Button from "../components/Button.jsx";
 import { getNextRoute } from "../utils/routes.js";
@@ -8,7 +8,6 @@ import { getNextRoute } from "../utils/routes.js";
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -20,11 +19,17 @@ export default function Login() {
   const submit = async (event) => {
     event.preventDefault();
     setError("");
+
+    const email = form.email.trim().toLowerCase();
+    if (!email.includes("@") || !email.includes(".")) {
+      setError("Enter the email address you signed up with, for example adi@example.com.");
+      return;
+    }
+
     setSubmitting(true);
     try {
-      const user = await login(form);
-      const fallback = getNextRoute(user);
-      navigate(location.state?.from?.pathname || fallback, { replace: true });
+      const user = await login({ ...form, email });
+      navigate(getNextRoute(user), { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -37,12 +42,13 @@ export default function Login() {
       <h2 className="text-2xl font-black">Welcome back</h2>
       <p className="mt-2 text-sm text-bean-muted">Sign in to continue to your support space.</p>
 
-      <form onSubmit={submit} className="mt-6 space-y-4">
+      <form onSubmit={submit} className="mt-6 space-y-4" noValidate>
         <label className="block">
           <span className="text-sm font-semibold">Email</span>
           <input
             name="email"
-            type="email"
+            type="text"
+            autoComplete="email"
             value={form.email}
             onChange={update}
             className="mt-2 w-full rounded-md border border-bean-sage/40 bg-white px-3 py-3 outline-none focus:border-bean-teal focus:ring-2 focus:ring-bean-teal/20"

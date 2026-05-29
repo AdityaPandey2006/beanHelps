@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import { api } from "../api/client.js";
 import Button from "../components/Button.jsx";
 import EmptyState from "../components/EmptyState.jsx";
+import ReportButton from "../components/ReportButton.jsx";
 import StatusBadge from "../components/StatusBadge.jsx";
 import Tag from "../components/Tag.jsx";
 import { asArray, formatDateTime } from "../utils/format.js";
@@ -71,6 +72,7 @@ export default function SupportGroupDetail() {
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-3xl font-black">{group.name}</h1>
               <StatusBadge tone={group.status}>{group.status}</StatusBadge>
+              <ReportButton targetType="support_group" targetId={group._id} label="Report support group" />
             </div>
             <p className="mt-2 max-w-3xl text-bean-muted">{group.description}</p>
             <div className="mt-4 flex flex-wrap gap-2">{asArray(group.tags).map((tag) => <Tag key={tag}>{tag}</Tag>)}</div>
@@ -109,7 +111,10 @@ export default function SupportGroupDetail() {
               <div className="max-h-[520px] space-y-3 overflow-y-auto pr-1">
                 {messages.length ? messages.map((item) => (
                   <div key={item._id} className="rounded-lg bg-bean-mist/70 p-3">
-                    <p className="text-xs font-bold text-bean-teal">{item.sender?.name || "Member"}</p>
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="text-xs font-bold text-bean-teal">{item.sender?.name || "Member"}</p>
+                      <ReportButton targetType="support_group_message" targetId={item._id} label="Report message" />
+                    </div>
                     <p className="mt-1 text-sm text-bean-ink">{item.content}</p>
                   </div>
                 )) : <EmptyState title="No messages yet">Start the circle gently.</EmptyState>}

@@ -16,16 +16,24 @@ export default function SupportGroupsPage() {
   const [matchTags, setMatchTags] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [activeGroupId, setActiveGroupId] = useState("");
+  const [joiningId, setJoiningId] = useState("");
 
   const load = useCallback(() => {
     const params = new URLSearchParams();
     if (filters.tags) params.set("tags", filters.tags);
     if (filters.language) params.set("language", filters.language);
     if (filters.groupType) params.set("groupType", filters.groupType);
-    api(`/support-groups${params.toString() ? `?${params}` : ""}`)
-      .then((data) => setGroups(data.groups || []))
+    const groupsRequest = api(`/support-groups${params.toString() ? `?${params}` : ""}`);
+    const homeRequest = user?.role === "beaner" ? api("/users/home") : Promise.resolve(null);
+
+    Promise.all([groupsRequest, homeRequest])
+      .then(([groupsData, homeData]) => {
+        setGroups(groupsData.groups || []);
+        setActiveGroupId(homeData?.supportGroup?.group?._id || "");
+      })
       .catch((err) => setError(err.message));
-  }, [filters]);
+  }, [filters, user?.role]);
 
   useEffect(() => {
     load();
@@ -33,15 +41,19 @@ export default function SupportGroupsPage() {
 
   const match = async () => {
     setMessage("");
-    const data = await api("/support-groups/match", {
-      method: "POST",
-      body: JSON.stringify({
-        tags: matchTags.split(",").map((tag) => tag.trim()).filter(Boolean),
-        preferredGroupType: "any",
-      }),
-    });
-    setMessage(data.group ? `Matched with ${data.group.name}` : "Added to waitlist. A circle will form when enough matching members are ready.");
-    load();
+    try {
+      const data = await api("/support-groups/match", {
+        method: "POST",
+        body: JSON.stringify({
+          tags: matchTags.split(",").map((tag) => tag.trim()).filter(Boolean),
+          preferredGroupType: "any",
+        }),
+      });
+      setMessage(data.group ? `Matched with ${data.group.name}` : "Added to waitlist. A circle will form when enough matching members are ready.");
+      load();
+    } catch (err) {
+      setMessage(err.message);
+    }
   };
 
   const canCreate = user?.role === "beanpist" && user?.therapistProfile?.verificationStatus === "verified";
@@ -51,7 +63,7 @@ export default function SupportGroupsPage() {
       <section className="rounded-lg bg-white/85 p-6 shadow-soft">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-sm font-bold uppercase tracking-wider text-bean-teal">Support circles</p>
+            <p className="text-sm font-bold uppercase tracking-wider text-bean-teal">Explore Support Groups</p>
             <h1 className="mt-2 text-3xl font-black">Small groups with structure</h1>
             <p className="mt-2 max-w-3xl text-bean-muted">Join manually or let matching place you into a circle based on tags and preferences.</p>
           </div>
@@ -85,7 +97,15 @@ export default function SupportGroupsPage() {
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {groups.length ? groups.map((group) => (
-          <GroupCard key={group._id} group={group} onJoined={load} />
+          <GroupCard
+            key={group._id}
+            group={group}
+            activeGroupId={activeGroupId}
+            joining={joiningId === group._id}
+            setJoiningId={setJoiningId}
+            setMessage={setMessage}
+            onJoined={load}
+          />
         )) : (
           <div className="md:col-span-2 xl:col-span-3">
             <EmptyState title="No matching groups">Try fewer filters or use auto-match to join the waitlist.</EmptyState>
@@ -96,10 +116,32 @@ export default function SupportGroupsPage() {
   );
 }
 
-function GroupCard({ group, onJoined }) {
+function GroupCard({ group, activeGroupId, joining, setJoiningId, setMessage, onJoined }) {
+  const isCurrentGroup = activeGroupId === group._id;
+  const hasAnotherActiveGroup = Boolean(activeGroupId) && !isCurrentGroup;
+
   const join = async () => {
-    await api(`/support-groups/${group._id}/join`, { method: "POST" });
-    onJoined();
+    if (isCurrentGroup) {
+      setMessage("You are already part of this support group.");
+      return;
+    }
+
+    if (hasAnotherActiveGroup) {
+      setMessage("You are already part of a support group. Leave your current circle before joining another one.");
+      return;
+    }
+
+    setJoiningId(group._id);
+    setMessage("");
+    try {
+      await api(`/support-groups/${group._id}/join`, { method: "POST" });
+      setMessage(`Joined ${group.name}.`);
+      onJoined();
+    } catch (err) {
+      setMessage(err.message);
+    } finally {
+      setJoiningId("");
+    }
   };
 
   return (
@@ -117,7 +159,17 @@ function GroupCard({ group, onJoined }) {
         {asArray(group.tags).slice(0, 4).map((tag) => <Tag key={tag}>{tag}</Tag>)}
       </div>
       <div className="mt-4 flex gap-2">
-        <Button variant="secondary" onClick={join}>Join</Button>
+        {isCurrentGroup ? (
+          <span className="inline-flex min-h-10 items-center rounded-md bg-emerald-50 px-3 text-sm font-bold text-emerald-700">
+            Your group
+          </span>
+        ) : hasAnotherActiveGroup ? (
+          <Button variant="secondary" onClick={join}>Already in a circle</Button>
+        ) : (
+          <Button variant="secondary" onClick={join} disabled={joining}>
+            {joining ? "Joining..." : "Join"}
+          </Button>
+        )}
         <Link className="btn-subtle" to={`/support-groups/${group._id}`}>View</Link>
       </div>
     </article>

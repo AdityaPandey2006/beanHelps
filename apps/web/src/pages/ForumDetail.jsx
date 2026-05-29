@@ -1,10 +1,11 @@
-import { CalendarDays, MessageCircle, Plus } from "lucide-react";
+import { CalendarDays, Lock, MessageCircle, Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client.js";
 import { useAuth } from "../auth/AuthContext.jsx";
 import Button from "../components/Button.jsx";
 import EmptyState from "../components/EmptyState.jsx";
+import ReportButton from "../components/ReportButton.jsx";
 import StatusBadge from "../components/StatusBadge.jsx";
 import Tag from "../components/Tag.jsx";
 import { asArray, formatDateTime } from "../utils/format.js";
@@ -18,7 +19,10 @@ export default function ForumDetail() {
   const [tab, setTab] = useState("discussion");
   const [postForm, setPostForm] = useState({ title: "", content: "", type: "thread" });
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isMember, setIsMember] = useState(false);
+  const [joining, setJoining] = useState(false);
 
   const canCreateTherapistContent =
     user?.role === "beanpist" && user?.therapistProfile?.verificationStatus === "verified";
@@ -31,14 +35,19 @@ export default function ForumDetail() {
       try {
         const forumData = await api(`/forums/slug/${forumKey}`).catch(() => api(`/forums/${forumKey}`));
         const currentForum = forumData.forum;
-        const [postsData, meetingsData] = await Promise.all([
+        const [postsData, meetingsData, myForumsData] = await Promise.all([
           api(`/forums/${currentForum._id}/posts`),
           api(`/forums/${currentForum._id}/meetings`),
+          user?.role === "beaner" ? api("/forums/my") : Promise.resolve({ forums: [] }),
         ]);
         if (active) {
           setForum(currentForum);
           setPosts(postsData.posts || []);
           setMeetings(meetingsData.meetings || []);
+          setIsMember(
+            user?.role !== "beaner" ||
+              (myForumsData.forums || []).some((item) => item._id === currentForum._id)
+          );
         }
       } catch (err) {
         if (active) setError(err.message);
@@ -50,7 +59,7 @@ export default function ForumDetail() {
     return () => {
       active = false;
     };
-  }, [forumKey]);
+  }, [forumKey, user?.role]);
 
   const grouped = useMemo(() => ({
     articles: posts.filter((post) => ["therapist_article", "resource"].includes(post.type)),
@@ -60,12 +69,31 @@ export default function ForumDetail() {
   const submitPost = async (event) => {
     event.preventDefault();
     if (!forum) return;
+    if (user?.role === "beaner" && !isMember) {
+      setNotice("Join this forum before posting or replying.");
+      return;
+    }
     const data = await api(`/forums/${forum._id}/posts`, {
       method: "POST",
       body: JSON.stringify(postForm),
     });
     setPosts((current) => [data.post, ...current]);
     setPostForm({ title: "", content: "", type: "thread" });
+  };
+
+  const joinForum = async () => {
+    if (!forum) return;
+    setJoining(true);
+    setNotice("");
+    try {
+      await api(`/forums/${forum._id}/join`, { method: "POST" });
+      setIsMember(true);
+      setNotice("Forum joined. You can now start posts and reply.");
+    } catch (err) {
+      setNotice(err.message);
+    } finally {
+      setJoining(false);
+    }
   };
 
   if (loading) return <div className="h-96 animate-pulse rounded-lg bg-white/70 shadow-soft" />;
@@ -82,10 +110,19 @@ export default function ForumDetail() {
             <div className="mt-4 flex flex-wrap gap-2">
               {asArray(forum.tags).map((tag) => <Tag key={tag}>{tag}</Tag>)}
             </div>
+            {notice && <p className="mt-4 rounded-md bg-bean-mist px-3 py-2 text-sm font-semibold text-bean-teal">{notice}</p>}
           </div>
-          <div className="flex rounded-lg bg-bean-mist p-1">
-            <TabButton active={tab === "discussion"} onClick={() => setTab("discussion")} icon={MessageCircle}>Discussion</TabButton>
-            <TabButton active={tab === "meetings"} onClick={() => setTab("meetings")} icon={CalendarDays}>Meetings</TabButton>
+          <div className="flex flex-col gap-3 sm:items-end">
+            {user?.role === "beaner" && !isMember && (
+              <Button onClick={joinForum} disabled={joining}>
+                <Plus className="h-4 w-4" />
+                {joining ? "Joining..." : "Join forum"}
+              </Button>
+            )}
+            <div className="flex rounded-lg bg-bean-mist p-1">
+              <TabButton active={tab === "discussion"} onClick={() => setTab("discussion")} icon={MessageCircle}>Discussion</TabButton>
+              <TabButton active={tab === "meetings"} onClick={() => setTab("meetings")} icon={CalendarDays}>Meetings</TabButton>
+            </div>
           </div>
         </div>
       </section>
@@ -93,18 +130,29 @@ export default function ForumDetail() {
       {tab === "discussion" ? (
         <div className="grid gap-6 xl:grid-cols-[0.9fr_1.2fr]">
           <section className="rounded-lg bg-white/85 p-5 shadow-soft">
-            <h2 className="text-xl font-black">Start a post</h2>
-            <form onSubmit={submitPost} className="mt-4 space-y-3">
-              <input className="field" placeholder="Title" value={postForm.title} onChange={(e) => setPostForm({ ...postForm, title: e.target.value })} required />
-              <textarea className="field min-h-28" placeholder="Share something useful, specific, or kind." value={postForm.content} onChange={(e) => setPostForm({ ...postForm, content: e.target.value })} required />
-              <select className="field" value={postForm.type} onChange={(e) => setPostForm({ ...postForm, type: e.target.value })}>
-                <option value="thread">Thread</option>
-                <option value="question">Question</option>
-                {canCreateTherapistContent && <option value="therapist_article">Therapist article</option>}
-                {canCreateTherapistContent && <option value="resource">Resource</option>}
-              </select>
-              <Button type="submit"><Plus className="h-4 w-4" />Post</Button>
-            </form>
+            {user?.role === "beaner" && !isMember ? (
+              <EmptyState
+                title="Join before participating"
+                action={<Button onClick={joinForum} disabled={joining}><Lock className="h-4 w-4" />{joining ? "Joining..." : "Join forum"}</Button>}
+              >
+                You can read the discussion, but posting is limited to forum members.
+              </EmptyState>
+            ) : (
+              <>
+                <h2 className="text-xl font-black">Start a post</h2>
+                <form onSubmit={submitPost} className="mt-4 space-y-3">
+                  <input className="field" placeholder="Title" value={postForm.title} onChange={(e) => setPostForm({ ...postForm, title: e.target.value })} required />
+                  <textarea className="field min-h-28" placeholder="Share something useful, specific, or kind." value={postForm.content} onChange={(e) => setPostForm({ ...postForm, content: e.target.value })} required />
+                  <select className="field" value={postForm.type} onChange={(e) => setPostForm({ ...postForm, type: e.target.value })}>
+                    <option value="thread">Thread</option>
+                    <option value="question">Question</option>
+                    {canCreateTherapistContent && <option value="therapist_article">Therapist article</option>}
+                    {canCreateTherapistContent && <option value="resource">Resource</option>}
+                  </select>
+                  <Button type="submit"><Plus className="h-4 w-4" />Post</Button>
+                </form>
+              </>
+            )}
           </section>
 
           <section className="space-y-4">
@@ -158,9 +206,12 @@ function TabButton({ active, onClick, icon: Icon, children }) {
 function PostCard({ post }) {
   return (
     <article className="rounded-lg bg-white/90 p-5 shadow-sm">
-      <div className="flex flex-wrap items-center gap-2">
-        <StatusBadge>{post.type?.replace("_", " ") || "thread"}</StatusBadge>
-        <span className="text-xs font-semibold text-bean-muted">by {post.author?.name || "community member"}</span>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <StatusBadge>{post.type?.replace("_", " ") || "thread"}</StatusBadge>
+          <span className="text-xs font-semibold text-bean-muted">by {post.author?.name || "community member"}</span>
+        </div>
+        <ReportButton targetType="forum_post" targetId={post._id} label="Report post" />
       </div>
       <Link to={`/forums/posts/${post._id}`} className="mt-3 block text-xl font-black hover:text-bean-teal">{post.title}</Link>
       <p className="mt-2 line-clamp-3 text-sm leading-6 text-bean-muted">{post.content}</p>

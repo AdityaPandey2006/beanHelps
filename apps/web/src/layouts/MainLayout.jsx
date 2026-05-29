@@ -22,8 +22,8 @@ function navFor(role) {
   if (role === "beanpist") {
     return [
       { to: "/therapist/home", label: "Dashboard", icon: LayoutDashboard },
-      { to: "/forums", label: "Forums", icon: MessageCircle },
-      { to: "/support-groups", label: "Groups", icon: UsersRound },
+      { to: "/forums", label: "Explore Forums", icon: MessageCircle },
+      { to: "/support-groups", label: "Explore Support Groups", icon: UsersRound },
     ];
   }
   if (role === "admin") {
@@ -35,8 +35,8 @@ function navFor(role) {
   }
   return [
     { to: "/home", label: "Home", icon: Home },
-    { to: "/forums", label: "Forums", icon: MessageCircle },
-    { to: "/support-groups", label: "Groups", icon: UsersRound },
+    { to: "/forums", label: "Explore Forums", icon: MessageCircle },
+    { to: "/support-groups", label: "Explore Support Groups", icon: UsersRound },
   ];
 }
 

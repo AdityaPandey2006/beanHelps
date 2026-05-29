@@ -1,5 +1,11 @@
 export function hasBeanerOnboarding(user) {
-  return Boolean(user?.onboardingProfile?.completedAt);
+  const profile = user?.onboardingProfile;
+  return Boolean(
+    profile?.completedAt ||
+      profile?.primaryStruggles?.length ||
+      profile?.languages?.length ||
+      profile?.ageRange
+  );
 }
 
 export function therapistStatus(user) {
