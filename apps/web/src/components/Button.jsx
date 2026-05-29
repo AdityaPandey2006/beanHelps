@@ -6,10 +6,10 @@ export default function Button({
   ...props
 }) {
   const variants = {
-    primary: "bg-bean-teal text-white",
+    primary: "bg-bean-teal text-white hover:bg-[#60998b]",
     secondary: "bg-white text-bean-ink border border-bean-sage/40 hover:bg-bean-mist",
     subtle: "bg-transparent text-bean-teal hover:bg-bean-mist",
-    danger: "bg-[#E07A5F] text-white",
+    danger: "bg-[#E9A77E] text-bean-ink hover:bg-[#E29A70]",
   };
 
   return (

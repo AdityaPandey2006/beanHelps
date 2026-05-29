@@ -394,17 +394,23 @@ const getRecommendedForums = async (user) => {
   }
 
   const primaryStruggles = user.onboardingProfile?.primaryStruggles || [];
+  const optionalTags = user.onboardingProfile?.optionalTags || [];
+  const recommendationTags = [...primaryStruggles, ...optionalTags];
 
-  if (!primaryStruggles.length) {
+  if (!recommendationTags.length) {
     return Forum.find({
       isActive: true,
       isFeatured: true,
     }).sort({ name: 1 });
   }
 
-  const normalizedStruggles = primaryStruggles.map((struggle) =>
-    struggle.trim().toLowerCase()
-  );
+  const normalizedTags = [
+    ...new Set(
+      recommendationTags
+        .map((tag) => tag.trim().toLowerCase())
+        .filter(Boolean)
+    ),
+  ];
 
   const memberships = await ForumMembership.find({
     user: user._id,
@@ -416,7 +422,7 @@ const getRecommendedForums = async (user) => {
   return Forum.find({
     _id: { $nin: joinedForumIds },
     isActive: true,
-    tags: { $in: normalizedStruggles },
+    tags: { $in: normalizedTags },
   }).sort({ isFeatured: -1, name: 1 });
 };
 
