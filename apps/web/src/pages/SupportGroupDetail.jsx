@@ -1,7 +1,8 @@
-import { CalendarDays, FileText, MessageSquareHeart, Sparkles } from "lucide-react";
+import { CalendarDays, CalendarPlus, FileText, MessageSquareHeart, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../api/client.js";
+import { useAuth } from "../auth/AuthContext.jsx";
 import Button from "../components/Button.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import ReportButton from "../components/ReportButton.jsx";
@@ -23,12 +24,16 @@ const resources = [
 
 export default function SupportGroupDetail() {
   const { groupId } = useParams();
+  const { user } = useAuth();
   const [group, setGroup] = useState(null);
   const [members, setMembers] = useState([]);
   const [meetings, setMeetings] = useState([]);
   const [messages, setMessages] = useState([]);
   const [tab, setTab] = useState("chat");
   const [message, setMessage] = useState("");
+  const [meetingForm, setMeetingForm] = useState(defaultMeetingForm());
+  const [meetingNotice, setMeetingNotice] = useState("");
+  const [creatingMeeting, setCreatingMeeting] = useState(false);
   const [error, setError] = useState("");
 
   const load = useCallback(() => {
@@ -61,8 +66,33 @@ export default function SupportGroupDetail() {
     setMessage("");
   };
 
+  const createMeeting = async (event) => {
+    event.preventDefault();
+    setMeetingNotice("");
+    setCreatingMeeting(true);
+    try {
+      const data = await api(`/support-groups/${groupId}/meetings`, {
+        method: "POST",
+        body: JSON.stringify(meetingForm),
+      });
+      setMeetings((current) => [...current, data.meeting].sort((a, b) => new Date(a.startsAt) - new Date(b.startsAt)));
+      setMeetingForm(defaultMeetingForm());
+      setMeetingNotice("Meeting scheduled.");
+    } catch (err) {
+      setMeetingNotice(err.message);
+    } finally {
+      setCreatingMeeting(false);
+    }
+  };
+
   if (error) return <div className="rounded-lg bg-rose-50 p-4 text-rose-700">{error}</div>;
   if (!group) return <div className="h-96 animate-pulse rounded-lg bg-white/70 shadow-soft" />;
+
+  const myMembership = members.find((member) => getId(member.user) === user?.id);
+  const canCreateMeeting =
+    user?.role === "admin" ||
+    getId(group.therapist) === user?.id ||
+    ["organizer", "therapist"].includes(myMembership?.role);
 
   return (
     <div className="space-y-6">
@@ -130,11 +160,87 @@ export default function SupportGroupDetail() {
           {tab === "resources" && <ListItems items={resources} />}
           {tab === "events" && (
             <div className="mt-4 space-y-3">
+              {canCreateMeeting && (
+                <form onSubmit={createMeeting} className="grid gap-3 rounded-lg bg-bean-mist/70 p-4">
+                  <div className="flex items-center gap-2">
+                    <CalendarPlus className="h-5 w-5 text-bean-teal" />
+                    <h3 className="font-black">Schedule a meeting</h3>
+                  </div>
+                  <input
+                    className="field"
+                    placeholder="Meeting title"
+                    value={meetingForm.title}
+                    onChange={(event) => setMeetingForm({ ...meetingForm, title: event.target.value })}
+                    required
+                  />
+                  <textarea
+                    className="field min-h-24"
+                    placeholder="What will this session be for?"
+                    value={meetingForm.description}
+                    onChange={(event) => setMeetingForm({ ...meetingForm, description: event.target.value })}
+                  />
+                  <div className="grid gap-3 md:grid-cols-3">
+                    <select
+                      className="field"
+                      value={meetingForm.mode}
+                      onChange={(event) => setMeetingForm({ ...meetingForm, mode: event.target.value })}
+                    >
+                      <option value="online">Online</option>
+                      <option value="offline">Offline</option>
+                      <option value="hybrid">Hybrid</option>
+                    </select>
+                    <input
+                      className="field"
+                      type="datetime-local"
+                      value={meetingForm.startsAt}
+                      onChange={(event) => setMeetingForm({ ...meetingForm, startsAt: event.target.value })}
+                      required
+                    />
+                    <input
+                      className="field"
+                      type="datetime-local"
+                      value={meetingForm.endsAt}
+                      onChange={(event) => setMeetingForm({ ...meetingForm, endsAt: event.target.value })}
+                      required
+                    />
+                  </div>
+                  {meetingForm.mode !== "offline" && (
+                    <input
+                      className="field"
+                      placeholder="Meeting link"
+                      value={meetingForm.meetingLink}
+                      onChange={(event) => setMeetingForm({ ...meetingForm, meetingLink: event.target.value })}
+                      required={meetingForm.mode === "online"}
+                    />
+                  )}
+                  {meetingForm.mode !== "online" && (
+                    <input
+                      className="field"
+                      placeholder="Location"
+                      value={meetingForm.location}
+                      onChange={(event) => setMeetingForm({ ...meetingForm, location: event.target.value })}
+                      required={meetingForm.mode === "offline"}
+                    />
+                  )}
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Button type="submit" disabled={creatingMeeting}>
+                      {creatingMeeting ? "Scheduling..." : "Schedule meeting"}
+                    </Button>
+                    {meetingNotice && <p className="text-sm font-semibold text-bean-teal">{meetingNotice}</p>}
+                  </div>
+                </form>
+              )}
               {meetings.length ? meetings.map((meeting) => (
                 <article key={meeting._id} className="rounded-lg bg-bean-mist/70 p-4">
                   <h3 className="font-black">{meeting.title}</h3>
                   <p className="mt-1 text-sm font-semibold text-bean-teal">{formatDateTime(meeting.startsAt)}</p>
                   <p className="mt-2 text-sm text-bean-muted">{meeting.description}</p>
+                  {meeting.meetingLink && (
+                    <a className="mt-3 inline-flex text-sm font-bold text-bean-teal hover:underline" href={meeting.meetingLink} target="_blank" rel="noreferrer">
+                      Open meeting link
+                    </a>
+                  )}
+                  {meeting.location && <p className="mt-2 text-sm text-bean-muted">{meeting.location}</p>}
                 </article>
               )) : <EmptyState title="No events yet">Group meetings will show here once scheduled.</EmptyState>}
             </div>
@@ -143,6 +249,33 @@ export default function SupportGroupDetail() {
       </div>
     </div>
   );
+}
+
+function defaultMeetingForm() {
+  const start = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  start.setMinutes(0, 0, 0);
+  const end = new Date(start.getTime() + 60 * 60 * 1000);
+
+  return {
+    title: "",
+    description: "",
+    mode: "online",
+    startsAt: toLocalInputValue(start),
+    endsAt: toLocalInputValue(end),
+    meetingLink: "",
+    location: "",
+  };
+}
+
+function toLocalInputValue(date) {
+  const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return offsetDate.toISOString().slice(0, 16);
+}
+
+function getId(value) {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  return value._id || value.id || "";
 }
 
 function Tab({ active, onClick, icon: Icon, children }) {
