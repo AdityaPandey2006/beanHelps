@@ -20,6 +20,12 @@ const env = {
   clientUrl: process.env.CLIENT_URL,
   jwtSecret: process.env.JWT_SECRET,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN,
+  selfPingUrl:
+    process.env.SELF_PING_URL ||
+    (process.env.RENDER_EXTERNAL_URL
+      ? `${process.env.RENDER_EXTERNAL_URL.replace(/\/$/, "")}/api/health`
+      : null),
+  selfPingIntervalMs: Number(process.env.SELF_PING_INTERVAL_MS) || 10 * 60 * 1000,
 };
 
 module.exports = env;
